@@ -1,4 +1,4 @@
-name: MarketDesign.ai NRA/TSO monitor
+name: MarketDesign.ai collectors
 
 on:
   schedule:
@@ -20,7 +20,7 @@ on:
         default: "25"
 
 concurrency:
-  group: nra-tso-monitor
+  group: collectors
   cancel-in-progress: false
 
 jobs:
@@ -92,7 +92,7 @@ jobs:
         if: steps.gate.outputs.run == 'true' && always()
         uses: actions/upload-artifact@v4
         with:
-          name: nra-tso-${{ matrix.source }}-${{ github.run_id }}
+          name: report-${{ matrix.source }}-${{ github.run_id }}
           path: run-report-${{ matrix.source }}.json
           retention-days: 14
 
