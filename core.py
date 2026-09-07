@@ -18,6 +18,8 @@ primary-source documents to the TRACK /ingest/document contract. Each source
 from __future__ import annotations
 
 import argparse
+import shutil
+import subprocess
 import hashlib
 import importlib
 import io
@@ -170,6 +172,55 @@ def extract_pdf_text(pdf_bytes: bytes, max_chars: int = MAX_CONTENT_CHARS) -> st
         parts.append(text[:remaining])
         size += len(parts[-1])
     return "\n\n".join(parts).strip()
+
+
+CHROME_CANDIDATES = (
+    os.getenv("CHROME_BIN"),
+    "google-chrome", "google-chrome-stable", "chromium", "chromium-browser",
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+)
+
+
+def _chrome_binary() -> str:
+    for candidate in CHROME_CANDIDATES:
+        if not candidate:
+            continue
+        resolved = shutil.which(candidate) or (candidate if Path(candidate).exists() else None)
+        if resolved:
+            return resolved
+    raise UpstreamUnavailable(
+        "no Chrome or Chromium binary found for rendered fetch (set CHROME_BIN)")
+
+
+def render_html(url: str, timeout: int = 60, virtual_time_ms: int = 9000) -> str:
+    """Fetch a page the way a browser sees it.
+
+    Several publishers — Terna, EEX, Red Eléctrica among them — render their
+    listings and article bodies client-side, so a plain request returns a shell
+    with no content, and Elia sits behind a challenge that only a real browser
+    clears. Chrome in headless mode with --dump-dom returns the DOM after the
+    scripts have run, which is the only way those sources can be read at all.
+
+    Chrome is used rather than a driver library because the runners already
+    have it and it adds no dependency to install or pin.
+    """
+    cmd = [
+        _chrome_binary(), "--headless=new", "--disable-gpu", "--no-sandbox",
+        "--disable-dev-shm-usage", "--hide-scrollbars", "--mute-audio",
+        f"--user-agent={USER_AGENT}",
+        f"--virtual-time-budget={virtual_time_ms}", "--dump-dom", url,
+    ]
+    try:
+        proc = subprocess.run(cmd, capture_output=True, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        raise UpstreamUnavailable(f"rendered fetch timed out after {timeout}s: {url}")
+    except OSError as exc:
+        raise UpstreamUnavailable(f"rendered fetch could not start Chrome: {exc}")
+
+    html = proc.stdout.decode("utf-8", "replace")
+    if len(html.strip()) < 500:
+        raise UpstreamUnavailable(f"rendered fetch returned an empty document: {url}")
+    return html
 
 
 def html_to_text(soup) -> str:
