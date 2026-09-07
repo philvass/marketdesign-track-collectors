@@ -58,6 +58,24 @@ class CollectorError(RuntimeError):
     pass
 
 
+class UpstreamUnavailable(CollectorError):
+    """The source site is down or returning nothing usable.
+
+    Distinct from CollectorError because it is not our defect and not
+    actionable: an empty body, invalid JSON where JSON is always served, or a
+    5xx from the publisher means there is nothing to collect this run. Raising
+    it exits 0 with a note rather than failing the workflow, so one publisher's
+    outage does not mark the whole monitor red and train the operator to ignore
+    it.
+
+    The flag is what the entry point tests: running ``core.py`` as a script
+    makes it ``__main__`` while ``sources/*`` import it as ``core``, so the
+    class object is not shared and ``except UpstreamUnavailable`` would miss.
+    """
+
+    upstream_unavailable = True
+
+
 def make_session() -> requests.Session:
     s = requests.Session()
     s.headers.update({
@@ -380,6 +398,10 @@ def main(argv: list[str] | None = None) -> int:
         raise CollectorError(f"No {source.INSTITUTION} candidate matched {args.match!r}")
 
     out_of_scope = getattr(source, "is_out_of_scope", lambda c: False)
+    # A source may widen its own freshness window. EUR-Lex is the case that
+    # forces this: CELLAR indexes the Official Journal weeks after publication,
+    # so a 30-day gate would baseline nearly every act instead of reporting it.
+    max_age_days = getattr(source, "MAX_AGE_DAYS", args.max_age_days)
 
     results = []
     for candidate in selected:
@@ -395,7 +417,7 @@ def main(argv: list[str] | None = None) -> int:
                 continue
 
             if (not getattr(source, "DATE_REFINED_ON_FETCH", False)
-                    and over_age(candidate.publication_date, args.max_age_days)
+                    and over_age(candidate.publication_date, max_age_days)
                     and never_fetched(db, candidate.source_id)):
                 # Freshness gate, applied before the request: a first-time
                 # document already past the age limit can only ever be
@@ -408,7 +430,7 @@ def main(argv: list[str] | None = None) -> int:
                     "candidate": asdict(candidate),
                     "skipped": True,
                     "skip_reason": (f"over_age (published {candidate.publication_date}, "
-                                    f"limit {args.max_age_days}d)"),
+                                    f"limit {max_age_days}d)"),
                     "stale": True,
                     "submitted": False,
                     "track_response": None,
@@ -435,7 +457,7 @@ def main(argv: list[str] | None = None) -> int:
         duplicate = is_unchanged(db, candidate.source_id, digest)
         previously_submitted = was_submitted(db, candidate.source_id)
         stale = (not previously_submitted
-                 and over_age(candidate.publication_date, args.max_age_days))
+                 and over_age(candidate.publication_date, max_age_days))
         record_seen(db, candidate, digest)
         item = {
             "candidate": asdict(candidate),
@@ -502,5 +524,10 @@ if __name__ == "__main__":
     try:
         raise SystemExit(main())
     except RuntimeError as exc:
+        if getattr(exc, "upstream_unavailable", False):
+            print(json.dumps({"ok": True, "collector_version": VERSION,
+                              "skipped": "upstream_unavailable", "detail": str(exc)},
+                             ensure_ascii=False))
+            raise SystemExit(0)
         print(json.dumps({"ok": False, "collector_version": VERSION, "error": str(exc)}, ensure_ascii=False), file=sys.stderr)
         raise SystemExit(2)

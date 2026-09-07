@@ -13,7 +13,8 @@ from datetime import datetime
 
 from bs4 import BeautifulSoup
 
-from core import Candidate, CollectorError, get_with_retry, extract_pdf_text, html_to_text, slugify, MAX_CONTENT_CHARS
+from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+                  extract_pdf_text, html_to_text, slugify, MAX_CONTENT_CHARS)
 
 INSTITUTION = "RECS International"
 DOCUMENT_TYPE = "MARKET_OPERATOR"
@@ -37,11 +38,22 @@ def _date(raw: str | None) -> str | None:
 def discover(session):
     found: dict[str, Candidate] = {}
 
-    r = get_with_retry(session, NEWS_API, params={"per_page": 30}, timeout=45)
+    # recs.org has served empty 200s across its whole site for days at a time.
+    # Neither discovery path is allowed to take the other down with it, and an
+    # empty body is an outage rather than a parsing failure.
+    empty_upstream = False
+    posts = []
     try:
-        posts = r.json()
-    except ValueError as exc:
-        raise CollectorError(f"RECS news API returned invalid JSON: {exc}")
+        r = get_with_retry(session, NEWS_API, params={"per_page": 30}, timeout=45)
+        if not r.content.strip():
+            empty_upstream = True
+        else:
+            try:
+                posts = r.json()
+            except ValueError as exc:
+                raise CollectorError(f"RECS news API returned invalid JSON: {exc}")
+    except CollectorError:
+        empty_upstream = True
     for post in posts if isinstance(posts, list) else []:
         raw_title = (post.get("title") or {}).get("rendered") or ""
         title = " ".join(BeautifulSoup(html_mod.unescape(raw_title), "html.parser")
@@ -59,6 +71,8 @@ def discover(session):
     # Documents catalog: inline JSON on the listing page.
     try:
         r = get_with_retry(session, DOCUMENTS, timeout=45)
+        if not r.content.strip():
+            empty_upstream = True
         m = re.search(r"const items = (\[.*?\]);", r.text, re.S)
         if m:
             for item in json.loads(m.group(1)):
@@ -74,6 +88,9 @@ def discover(session):
         pass
 
     if not found:
+        if empty_upstream:
+            raise UpstreamUnavailable(
+                "recs.org served an empty response on every discovery path")
         raise CollectorError("RECS discovery returned no candidates")
     return f"{NEWS_API} + {DOCUMENTS}", list(found.values())
 
