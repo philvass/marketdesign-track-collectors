@@ -89,6 +89,21 @@ def make_session() -> requests.Session:
     return s
 
 
+# Bot-protection interstitials are served as HTTP 200 with a short holding
+# page instead of the content. They usually clear within seconds, so a
+# request that lands on one is retried like a 5xx rather than parsed.
+CHALLENGE_TITLES = re.compile(
+    r"<title>\s*(one moment, please|just a moment|attention required|"
+    r"checking your browser|access denied|please wait)", re.I)
+
+
+def is_challenge_page(response: requests.Response) -> bool:
+    ctype = (response.headers.get("content-type") or "").lower()
+    if "html" not in ctype and ctype:
+        return False
+    return bool(CHALLENGE_TITLES.search(response.text[:4000]))
+
+
 def get_with_retry(session: requests.Session, url: str, timeout: int = 30,
                    attempts: int = 3, **kwargs) -> requests.Response:
     last: Exception | None = None
@@ -99,6 +114,12 @@ def get_with_retry(session: requests.Session, url: str, timeout: int = 30,
                 time.sleep(1.5 * (n + 1))
                 continue
             r.raise_for_status()
+            if is_challenge_page(r):
+                if n + 1 < attempts:
+                    time.sleep(4.0 * (n + 1))
+                    continue
+                raise CollectorError(
+                    f"GET failed for {url}: bot challenge page on all {attempts} attempts")
             return r
         except requests.RequestException as exc:
             last = exc

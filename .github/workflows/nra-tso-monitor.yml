@@ -89,7 +89,10 @@ jobs:
           key: state-${{ matrix.source }}-${{ github.run_id }}
 
       - name: Upload run report
+        # Diagnostic only: a collector that ran must not fail because GitHub's
+        # artifact service refused to store its report.
         if: steps.gate.outputs.run == 'true' && always()
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: report-${{ matrix.source }}-${{ github.run_id }}
@@ -175,7 +178,10 @@ jobs:
           key: state-${{ matrix.source }}-${{ github.run_id }}
 
       - name: Upload run report
+        # Diagnostic only: a collector that ran must not fail because GitHub's
+        # artifact service refused to store its report.
         if: steps.gate.outputs.run == 'true' && always()
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: rendered-${{ matrix.source }}-${{ github.run_id }}
