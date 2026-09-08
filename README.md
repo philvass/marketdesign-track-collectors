@@ -32,7 +32,12 @@ editorial review.
 | `omie` | OMIE | notas-de-prensa listing (PDFs; monthly price reports excluded) |
 | `gme` | GME | electricity news archive (results-noise filtered) + DTF technical rules |
 | `epex` | EPEX SPOT | newsroom listing (noise-filtered; 20s pacing + empty-202 WAF guard) |
+| `ferc` | FERC (US) | news releases + headlines via rendered fetch (Cloudflare challenge) + Federal Register rules/NOPRs; US title filter |
+| `caiso` | CAISO (US) | news-release cards, market topics only; US title filter |
+| `nyiso` | NYISO (US) | /view-press asset publisher (press coverage dropped); date read on fetch; US title filter |
+| `miso` | MISO (US) | sitemap.xml news-release entries with lastmod (listing pages 429 quickly); US title filter |
 
+Deferred: **ERCOT** (ercot.com) — Incapsula blocks plain and rendered fetches alike.
 Deferred: **Elia** (elia.be) — hard Cloudflare JS challenge on every path; needs a
 real browser (Playwright) to scrape. Most Elia rule changes surface via CREG
 approvals anyway.

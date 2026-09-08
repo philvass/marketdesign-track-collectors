@@ -256,6 +256,10 @@ def build_payload(source, candidate: Candidate, content: str) -> dict:
     return {
         "institution": source.INSTITUTION,
         "document_type": source.DOCUMENT_TYPE,
+        # Which monitor the document feeds. Everything is European unless the
+        # adapter says otherwise; the US adapters set REGION = "US" and TRACK
+        # routes them to the US page and its stricter significance gate.
+        "region": getattr(source, "REGION", "EU"),
         "url": candidate.url,
         "publication_date": candidate.publication_date,
         "title": candidate.title,
