@@ -25,6 +25,14 @@ from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry
 INSTITUTION = "EUR-Lex"
 DOCUMENT_TYPE = "REGULATOR"
 
+# The one exception to the site-wide "today or yesterday" rule, and it exists
+# because of how EUR-Lex works rather than as a preference: CELLAR indexes the
+# Official Journal days after the act is published, so a one-day window would
+# baseline nearly every act instead of reporting it. A week is the smallest
+# window that still catches them. The worker honours this because the payload
+# carries it; see build_payload in core.py.
+MAX_AGE_DAYS = 7
+
 SPARQL = "http://publications.europa.eu/webapi/rdf/sparql"
 BASE = "https://eur-lex.europa.eu"
 DIRECTORY_ENERGY = "http://publications.europa.eu/resource/authority/dir-eu-legal-act/12"

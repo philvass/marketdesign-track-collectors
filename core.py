@@ -284,6 +284,12 @@ def build_payload(source, candidate: Candidate, content: str) -> dict:
         # adapter says otherwise; the US adapters set REGION = "US" and TRACK
         # routes them to the US page and its stricter significance gate.
         "region": getattr(source, "REGION", "EU"),
+        # A source whose publisher indexes late declares its own freshness
+        # window, and the worker honours it up to a cap. Only EUR-Lex does:
+        # CELLAR lags the Official Journal by days, so the site-wide one-day
+        # rule would baseline every act. Absent here means the default applies.
+        **({"max_age_days": source.MAX_AGE_DAYS}
+           if isinstance(getattr(source, "MAX_AGE_DAYS", None), int) else {}),
         "url": candidate.url,
         "publication_date": candidate.publication_date,
         "title": candidate.title,

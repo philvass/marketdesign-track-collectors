@@ -112,12 +112,17 @@ day** in production (`MAX_AGE_DAYS` in the workflow, `MAX_DOC_AGE_DAYS` on the
 worker): published today or yesterday, nothing older. No source overrides it —
 the rule is the same for every site.
 
-Two consequences worth knowing. Sources that publish with an indexing lag will
-now rarely submit: EUR-Lex, where CELLAR indexes the Official Journal weeks
-after publication, and the market monitors, whose reports the library dates by
-year alone. They stay collected because their state keeps advancing, but they
-will mostly report nothing new. Widening the window is a one-line change in
-both places if that trade turns out to be wrong.
+**One exception, EUR-Lex at 7 days.** CELLAR indexes the Official Journal days
+after an act is published, so a one-day window would baseline nearly every act
+instead of reporting it. A source declares its own window with a module-level
+`MAX_AGE_DAYS`; `build_payload` puts it in the payload as `max_age_days` and
+the worker honours it, capped at 30 days so a mistake in a collector widens the
+window rather than removing it. Add this only where the publisher indexes late,
+never to catch more.
+
+The market monitors keep the standard window and so will rarely submit, because
+their library dates reports by year alone. They stay collected and their state
+keeps advancing; they will mostly report nothing new.
 
 An **undated** document is now held rather than passed. Under a month-long
 window a missing date was not evidence of age; under a one-day window almost
