@@ -332,6 +332,25 @@ def record_seen(db: sqlite3.Connection, candidate: Candidate, digest: str) -> No
     db.commit()
 
 
+def report_run(track_url: str, token: str | None, **fields) -> None:
+    """Tell TRACK this collector ran, whatever the outcome.
+
+    Without this a source that has silently stopped working is
+    indistinguishable from one whose publisher had a quiet day: both submit
+    nothing and both exit 0. NYISO sat in the first state for days while every
+    job stayed green. Best effort by design — a monitoring call must never be
+    the reason a collection run fails.
+    """
+    url = track_url.replace("/ingest/document", "/ingest/collector-run")
+    headers = {"Content-Type": "application/json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    try:
+        requests.post(url, json=fields, headers=headers, timeout=20)
+    except requests.RequestException:
+        pass
+
+
 def submit(session: requests.Session, track_url: str, payload: dict, token: str | None = None) -> dict:
     headers = {"Content-Type": "application/json"}
     if token:
@@ -562,6 +581,14 @@ def main(argv: list[str] | None = None) -> int:
             time.sleep(2.0)
         results.append(item)
 
+    report_run(args.track_url, args.token, source=args.source,
+               institution=getattr(source, "INSTITUTION", ""),
+               region=getattr(source, "REGION", "EU"),
+               mode=("BOOTSTRAP" if args.bootstrap_state else ("SUBMIT" if args.submit else "DRY_RUN")),
+               ok=True, discovered=len(discovered), processed=len(results),
+               submitted=sum(1 for r in results if r.get("submitted")),
+               collector_version=VERSION)
+
     summary = {
         "ok": True,
         "collector_version": VERSION,
@@ -596,11 +623,29 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
+def _argv_value(flag: str, default: str | None = None) -> str | None:
+    """Read one flag straight from argv, for the error paths that run before
+    or instead of argument parsing."""
+    for i, a in enumerate(sys.argv):
+        if a == flag and i + 1 < len(sys.argv):
+            return sys.argv[i + 1]
+        if a.startswith(flag + "="):
+            return a.split("=", 1)[1]
+    return default
+
+
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
     except RuntimeError as exc:
-        if getattr(exc, "upstream_unavailable", False):
+        track_url = _argv_value("--track-url", os.getenv("TRACK_INGEST_URL", DEFAULT_TRACK_URL))
+        token = _argv_value("--token", os.getenv("TRACK_INGEST_TOKEN"))
+        source_name = _argv_value("--source", "unknown")
+        unavailable = getattr(exc, "upstream_unavailable", False)
+        report_run(track_url, token, source=source_name, ok=not unavailable,
+                   discovered=0, processed=0, submitted=0,
+                   note=str(exc)[:400], collector_version=VERSION)
+        if unavailable:
             print(json.dumps({"ok": True, "collector_version": VERSION,
                               "skipped": "upstream_unavailable", "detail": str(exc)},
                              ensure_ascii=False))
