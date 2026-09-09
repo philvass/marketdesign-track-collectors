@@ -42,6 +42,7 @@ editorial review.
 | `potomac` | Potomac Economics — MISO/NYISO/ISO-NE/ERCOT monitors (US) | document library per market, current and previous year (PDFs); monitor noise filter |
 | `texas-register` | PUCT via the Texas Register (US) | official weekly issues, last six, filtered to Public Utility Commission items and 16 TAC ch. 25 rule citations |
 | `entsoe-consultations` | ENTSO-E consultation hub (EU) | consultations.entsoe.eu Citizen Space: TSO methodology proposals, one page, no pagination |
+| `elia` | Elia (BE TSO) | plain crawl of consultations + press releases under a declared agent, as elia.be/robots.txt permits; the WAF currently answers 403, so runs report `upstream_unavailable` and exit 0 |
 
 Deferred: **ERCOT** (ercot.com) — Imperva/Incapsula returns 403 to plain
 requests, to the rendered fetch, and to every subdomain tried (`sa.`, `data.`,
@@ -59,7 +60,21 @@ before they take effect; this is the Texan equivalent of the Federal Register
 route used for FERC. `potomac` collects ERCOT's independent market monitor and
 returns more ERCOT documents than any other market.
 
-Deferred: **Elia** (elia.be) — Cloudflare's managed challenge. Retested 9 Sept
+**Elia** (elia.be) — an adapter now exists and runs, because elia.be/robots.txt
+is served without challenge and grants `User-agent: * / Allow: /`. It crawls
+the way that permission describes: plain HTTP, honestly declared agent, no
+browser impersonation. The WAF still answers 403 to everything but robots.txt,
+so each run reports `upstream_unavailable` and exits 0 at the cost of one
+request. It starts working by itself if Elia's firewall stops refusing the
+crawler its own policy allows.
+
+Do not "fix" it with a rendered fetch. The same robots.txt contains
+`User-agent: CloudflareBrowserRenderingCrawler / Disallow: /`, so rendering —
+the one technique that could clear the challenge — is the technique the site
+refuses by name. The permission to crawl and the refusal to render are both
+theirs, and both are honoured.
+
+History: Cloudflare's managed challenge. Retested 9 Sept
 2026 with three techniques beyond the plain rendered fetch: a longer virtual
 time budget, a warmed profile reused across two passes, and `eliagroup.eu`.
 The challenge never settles, so `--dump-dom` hangs rather than returning a
