@@ -36,8 +36,14 @@ editorial review.
 | `caiso` | CAISO (US) | news-release cards, market topics only; US title filter |
 | `nyiso` | NYISO (US) | /view-press asset publisher (press coverage dropped); date read on fetch; US title filter |
 | `miso` | MISO (US) | sitemap.xml news-release entries with lastmod (listing pages 429 quickly); US title filter |
+| `pjm` | PJM (US) | Inside Lines RSS with full article bodies inline; US title filter |
+| `spp` | SPP (US) | press-release listing (dates in the row; articles under /news-list/); US title filter |
+| `pjm-imm` | Monitoring Analytics — PJM IMM (US) | FERC-docket filings + State of the Market recommendations section (PDFs); monitor noise filter |
+| `potomac` | Potomac Economics — MISO/NYISO/ISO-NE/ERCOT monitors (US) | document library per market, current and previous year (PDFs); monitor noise filter |
 
 Deferred: **ERCOT** (ercot.com) — Incapsula blocks plain and rendered fetches alike.
+ERCOT's market is still reached indirectly: Potomac Economics is its independent
+market monitor and its reports are collected under `potomac`.
 Deferred: **Elia** (elia.be) — hard Cloudflare JS challenge on every path; needs a
 real browser (Playwright) to scrape. Most Elia rule changes surface via CREG
 approvals anyway.

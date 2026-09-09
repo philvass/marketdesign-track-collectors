@@ -28,7 +28,10 @@ MARKET_DESIGN = re.compile(
     r"tariff|market power|mitigation|interregional transfer|seams|"
     r"fast-start|uplift|congestion revenue|financial transmission right|"
     r"capacity performance|reliability must-run|rmr|"
-    r"colocat|co-locat|large load|"
+    r"colocat|co-locat|large load|data cent|"
+    # RTO governance is market design when it decides who writes the rules;
+    # PJM's 2026 reform is the case that made this necessary.
+    r"governance reform|stakeholder reform|governance and stakeholder|"
     # Decision verbs: an approval or rejection is what the monitor exists for.
     r"board approves|governing body approves|board of governors approves|"
     r"ferc approves|ferc accepts|ferc rejects|ferc directs|ferc proposes|"
@@ -48,8 +51,19 @@ NOISE = re.compile(
     r"pipeline|natural gas|lng|hydropower|hydroelectric|dam safety|"
     r"oil pipeline|sunshine notice|ferc insight|highlights|"
     r"selected developers|competitive transmission|transmission project|"
+    r"transmission planning|connection study|transmission readiness|"
     r"expedited resource addition|eras cycle|interconnection queue|"
     r"celebrat|anniversary|scholarship|award)", re.I)
+
+
+# The monitors are a different case. Their quarterly and annual reports are
+# the product, not the housekeeping, so the general noise list would throw
+# away exactly what makes them worth reading. Only genuinely non-substantive
+# items are dropped here.
+MONITOR_NOISE = re.compile(
+    r"\b(appoint|reappoint|elects|elected|names |named |welcomes|retire|"
+    r"careers|vacanc|webinar|registration|celebrat|anniversary|award|"
+    r"brand guidelines|fact sheet)\b", re.I)
 
 
 def title_in_scope(title: str) -> bool:
