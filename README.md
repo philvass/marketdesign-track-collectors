@@ -40,23 +40,44 @@ editorial review.
 | `spp` | SPP (US) | press-release listing (dates in the row; articles under /news-list/); US title filter |
 | `pjm-imm` | Monitoring Analytics — PJM IMM (US) | FERC-docket filings + State of the Market recommendations section (PDFs); monitor noise filter |
 | `potomac` | Potomac Economics — MISO/NYISO/ISO-NE/ERCOT monitors (US) | document library per market, current and previous year (PDFs); monitor noise filter |
+| `texas-register` | PUCT via the Texas Register (US) | official weekly issues, last six, filtered to Public Utility Commission items and 16 TAC ch. 25 rule citations |
+| `entsoe-consultations` | ENTSO-E consultation hub (EU) | consultations.entsoe.eu Citizen Space: TSO methodology proposals, one page, no pagination |
 
 Deferred: **ERCOT** (ercot.com) — Imperva/Incapsula returns 403 to plain
 requests, to the rendered fetch, and to every subdomain tried (`sa.`, `data.`,
-`apiexplorer.`). The Texas PUC interchange, the obvious second route, is behind
-Cloudflare and also refuses. Retested 9 Sept 2026; do not retry without a new
-technique. ERCOT's market is reached indirectly instead: Potomac Economics is
-its independent market monitor and its reports are collected under `potomac`,
-which returns more ERCOT documents than any other market.
+`apiexplorer.`, `api.`). Even `robots.txt` is refused, so ERCOT publishes no
+machine-readable statement of what it permits. The Texas PUC interchange and
+`puc.texas.gov` are behind Cloudflare and also refuse. `developer.ercot.com`
+is open but documents the market-participant transaction APIs, which need
+certificates and carry no publications. Retested 9 Sept 2026; do not retry
+without a new technique.
+
+ERCOT's market design is covered by two open routes instead. `texas-register`
+reads the Secretary of State's official weekly publication, where PUCT
+rulemakings — the decisions that actually change ERCOT's market — must appear
+before they take effect; this is the Texan equivalent of the Federal Register
+route used for FERC. `potomac` collects ERCOT's independent market monitor and
+returns more ERCOT documents than any other market.
 
 Deferred: **Elia** (elia.be) — Cloudflare's managed challenge. Retested 9 Sept
 2026 with three techniques beyond the plain rendered fetch: a longer virtual
 time budget, a warmed profile reused across two passes, and `eliagroup.eu`.
 The challenge never settles, so `--dump-dom` hangs rather than returning a
-page. `opendata.elia.be` is open but carries only grid time series and news
-about the data platform itself. Belgian market-design decisions are still
-covered, because Elia's proposals need CREG approval and `creg` is collected;
-what is missing is Elia's own consultations.
+page. `opendata.elia.be` is open but carries only grid time series.
+
+Worth knowing before anyone escalates: Elia's own `robots.txt` is served
+without challenge and says `User-agent: * / Allow: /`, with content signals
+`search=yes, ai-train=no, use=reference`. Their published policy therefore
+permits general crawling; the block is an over-broad WAF, not a stated refusal.
+That makes asking Elia to allow our user agent a request to honour their own
+robots.txt rather than an exception. Note the same file disallows named AI
+crawlers (GPTBot, ClaudeBot, CCBot, Google-Extended) and forbids training use
+— TRACK analyses and links rather than trains, which `use=reference` permits,
+but the signal is there and should be respected.
+
+Belgian decisions remain covered through `creg`, which approves Elia's
+proposals, and the Central European methodology proposals Elia is party to are
+consulted in the open at `entsoe-consultations`.
 ## Local usage
 
 ```
