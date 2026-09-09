@@ -69,6 +69,9 @@ jobs:
         env:
           TRACK_INGEST_URL: ${{ vars.TRACK_INGEST_URL }}
           TRACK_INGEST_TOKEN: ${{ secrets.TRACK_INGEST_TOKEN }}
+          # The monitor carries today's news. A document first seen more than
+          # a day after it was published is baselined, not submitted.
+          MAX_AGE_DAYS: "1"
         run: |
           set -o pipefail
           MODE="${{ github.event.inputs.mode || 'submit' }}"
@@ -157,6 +160,9 @@ jobs:
         env:
           TRACK_INGEST_URL: ${{ vars.TRACK_INGEST_URL }}
           TRACK_INGEST_TOKEN: ${{ secrets.TRACK_INGEST_TOKEN }}
+          # The monitor carries today's news. A document first seen more than
+          # a day after it was published is baselined, not submitted.
+          MAX_AGE_DAYS: "1"
           CHROME_BIN: ${{ env.CHROME_BIN }}
         run: |
           set -o pipefail

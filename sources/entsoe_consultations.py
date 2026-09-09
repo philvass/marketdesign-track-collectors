@@ -43,9 +43,6 @@ def _parse(day: str, month: str, year: str) -> str | None:
             continue
     return None
 
-# Consultations sit open for weeks and the interesting ones are still open,
-# so the default month-long freshness window would baseline them.
-MAX_AGE_DAYS = 180
 DATE_REFINED_ON_FETCH = True
 
 # Research, innovation and system-development consultations are ENTSO-E's

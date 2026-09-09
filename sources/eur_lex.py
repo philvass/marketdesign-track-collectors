@@ -34,7 +34,6 @@ LIMIT = 40
 # CELLAR runs weeks behind the Official Journal, so the default 30-day gate
 # would baseline almost every act instead of reporting it. TRACK should still
 # carry an act it first learns about six weeks after publication.
-MAX_AGE_DAYS = 120
 
 QUERY = """PREFIX cdm: <http://publications.europa.eu/ontology/cdm#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>

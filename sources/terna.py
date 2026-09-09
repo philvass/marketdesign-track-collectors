@@ -25,8 +25,8 @@ LISTING = f"{BASE}/en/media/press-releases"
 ARTICLE = re.compile(r"/en/media/press-releases/detail/")
 _DATE = re.compile(r"(\d{1,2})\s+(January|February|March|April|May|June|July|August|"
                    r"September|October|November|December)\s+(20\d{2})", re.I)
-# Terna also stamps releases numerically, in Italian day-first order.
-_DATE_NUM = re.compile(r"\b(\d{2})/(\d{2})/(20\d{2})\b")
+# The stamp on the article page, month first: "08/13/2026 - 12:02 PM".
+_DATE_STAMP = re.compile(r"\b(\d{2})/(\d{2})/(20\d{2})\b")
 MONTHS = {m.lower(): i for i, m in enumerate(
     ["January", "February", "March", "April", "May", "June", "July", "August",
      "September", "October", "November", "December"], start=1)}
@@ -74,6 +74,20 @@ def fetch_content(session, candidate: Candidate) -> str:
         if stamp[:4].isdigit():
             candidate.publication_date = stamp[:10]
 
+    # Terna stamps the release in its own element, month first despite the
+    # site being Italian: "08/13/2026 - 12:02 PM". Read that rather than
+    # searching the body, which yields dates the article talks about — a
+    # half-year report "as of 30 June" was being filed under 30 June.
+    if not candidate.publication_date:
+        el = soup.select_one(".publication-date__time, .cmp--website-publicationdate")
+        m = _DATE_STAMP.search(el.get_text(" ", strip=True)) if el else None
+        if m:
+            try:
+                candidate.publication_date = datetime(
+                    int(m.group(3)), int(m.group(1)), int(m.group(2))).date().isoformat()
+            except ValueError:
+                pass
+
     body = soup.find("main") or soup.find("article") or soup
     text = html_to_text(body)
 
@@ -86,14 +100,6 @@ def fetch_content(session, candidate: Candidate) -> str:
                 ).date().isoformat()
             except (ValueError, KeyError):
                 pass
-    if not candidate.publication_date:
-        for d, mth, y in _DATE_NUM.findall(text):
-            try:
-                candidate.publication_date = datetime(
-                    int(y), int(mth), int(d)).date().isoformat()
-                break
-            except ValueError:
-                continue
     if len(text.strip()) < 400:
         raise CollectorError(f"Terna article yielded too little text: {candidate.url}")
     return text[:MAX_CONTENT_CHARS]

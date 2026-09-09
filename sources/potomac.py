@@ -30,7 +30,6 @@ MARKETS = ["MISO", "NYISO", "ISO-NE", "ERCOT"]
 # The library dates documents by publication year only, so the day is never
 # known. Reports are annual or quarterly and the freshness gate is measured in
 # days, which would baseline all of them: widen the window to a year.
-MAX_AGE_DAYS = 400
 
 # Most file names carry the real publication date, which is better than the
 # library's year-only cell: 5-13-2026, 03-17-25 and 2026-05-13 all appear.

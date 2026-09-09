@@ -30,7 +30,6 @@ DOCUMENT_TYPE = "REGULATOR"
 BASE = "https://www.sos.state.tx.us"
 ARCHIVE = f"{BASE}/texreg/archive/index.shtml"
 ISSUES = 6                      # weekly, so about six weeks of cover
-MAX_AGE_DAYS = 60               # matched to the window discovery reads
 
 _ISSUE = re.compile(r"/archive/([A-Za-z]+\d{1,2}\d{4})/index\.html", re.I)
 _ISSUE_DATE = re.compile(r"([A-Za-z]+)\s+(\d{1,2}),\s+(20\d{2})")

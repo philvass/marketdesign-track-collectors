@@ -79,6 +79,30 @@ def discover(session):
     return NEWS, list(found.values())
 
 
+# Initiative dates live on the detail record, not the search result.
+DATE_REFINED_ON_FETCH = True
+
+
+def _latest_published(data) -> str | None:
+    """Newest publication stage date on a Better Regulation initiative.
+
+    An initiative accumulates stages, and the one that matters for a monitor
+    is the most recent, because that is what changed.
+    """
+    stamps = []
+    for pub in data.get("publications") or []:
+        # The API stamps dates as "2026/08/25 12:20:31", not ISO.
+        raw = str(pub.get("publishedDate") or "")[:10].replace("/", "-")
+        if re.fullmatch(r"\d{4}-\d{2}-\d{2}", raw):
+            stamps.append(raw)
+    if stamps:
+        return max(stamps)
+    # No published stage yet: fall back to when the initiative last changed,
+    # which is the only other signal that something happened.
+    fallback = str(data.get("modifiedDate") or "")[:10].replace("/", "-")
+    return fallback if re.fullmatch(r"\d{4}-\d{2}-\d{2}", fallback) else None
+
+
 def fetch_content(session, candidate: Candidate) -> str:
     m = re.search(r"/initiatives/(\d+)", candidate.url)
     if m:
@@ -89,6 +113,7 @@ def fetch_content(session, candidate: Candidate) -> str:
             raise CollectorError(f"BRP API invalid JSON for initiative {m.group(1)}: {exc}")
         if data.get("shortTitle"):
             candidate.title = " ".join(str(data["shortTitle"]).split())
+        candidate.publication_date = _latest_published(data) or candidate.publication_date
         parts = []
         for key, label in (("reference", "Reference"), ("unit", "Unit"),
                            ("shortTitle", "Initiative"), ("dossierSummary", "Summary")):

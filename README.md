@@ -106,9 +106,24 @@ nothing), `--submit`. State: `./state/<source>.sqlite3`.
 
 ### Freshness gate
 
-TRACK is a monitor, not an archive, so a document first seen more than
-`--max-age-days` (default 30) after publication is baselined rather than
-submitted. When discovery already knows the publication date, that decision is
+TRACK carries today's news. A document first seen more than `--max-age-days`
+after publication is baselined rather than submitted, and that window is **1
+day** in production (`MAX_AGE_DAYS` in the workflow, `MAX_DOC_AGE_DAYS` on the
+worker): published today or yesterday, nothing older. No source overrides it —
+the rule is the same for every site.
+
+Two consequences worth knowing. Sources that publish with an indexing lag will
+now rarely submit: EUR-Lex, where CELLAR indexes the Official Journal weeks
+after publication, and the market monitors, whose reports the library dates by
+year alone. They stay collected because their state keeps advancing, but they
+will mostly report nothing new. Widening the window is a one-line change in
+both places if that trade turns out to be wrong.
+
+An **undated** document is now held rather than passed. Under a month-long
+window a missing date was not evidence of age; under a one-day window almost
+everything is too old, so "unknown" is far more likely to be stale than fresh.
+Undated documents appear on the editorial desk's rejected page as
+`STOP_UNDATED`, with the usual promote button. When discovery already knows the publication date, that decision is
 made *before* the fetch: the document is recorded as `STALE_SKIPPED_NOT_FETCHED`
 with an empty content hash and never requested. The skip is sticky, so it costs
 one decision rather than one request per run, which matters on sources that
