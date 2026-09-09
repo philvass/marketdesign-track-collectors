@@ -14,11 +14,18 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
-from core import Candidate, UpstreamUnavailable, get_with_retry, html_to_text, slugify, MAX_CONTENT_CHARS
+from core import (Candidate, UpstreamUnavailable, html_to_text,
+                  render_html, slugify, MAX_CONTENT_CHARS)
 from sources.us_common import REGION, title_in_scope  # noqa: F401
 
 INSTITUTION = "NYISO"
 DOCUMENT_TYPE = "ISO"
+# A plain request works from a residential address and returns a page with no
+# releases on it from a datacentre one, which is what the runners have: the
+# collector reported "carried no releases" on every scheduled sweep while the
+# same code worked locally. A rendered fetch returns the full listing from
+# both. robots.txt allows this path, and does not name any crawler.
+NEEDS_BROWSER = True
 
 BASE = "https://www.nyiso.com"
 LISTING = f"{BASE}/view-press"
@@ -35,8 +42,7 @@ def _clean_title(t: str) -> str:
 
 
 def discover(session):
-    r = get_with_retry(session, LISTING, timeout=45)
-    soup = BeautifulSoup(r.text, "html.parser")
+    soup = BeautifulSoup(render_html(LISTING, timeout=120, virtual_time_ms=15000), "html.parser")
     found: dict[str, Candidate] = {}
     for a in soup.select("a.asset-title[href]"):
         title = _clean_title(a.get_text(" ", strip=True))
@@ -60,8 +66,8 @@ def is_out_of_scope(candidate: Candidate) -> bool:
 
 
 def fetch_content(session, candidate: Candidate) -> str:
-    r = get_with_retry(session, candidate.url, timeout=45)
-    soup = BeautifulSoup(r.text, "html.parser")
+    soup = BeautifulSoup(render_html(candidate.url, timeout=120, virtual_time_ms=12000),
+                         "html.parser")
     h1 = soup.find("h1")
     if h1:
         title = _clean_title(h1.get_text(" ", strip=True))
