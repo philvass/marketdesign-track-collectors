@@ -49,6 +49,21 @@ def _date(raw: str) -> str | None:
 _BODIES: dict[str, str] = {}
 
 
+def _diagnose(r) -> str:
+    """Describe what actually came back.
+
+    "carried no items" is useless when the same request returns ten items
+    from a laptop and none from a runner, which is what PJM does. Recording
+    the status, size and opening bytes turns the next failure into evidence
+    instead of another round of guessing.
+    """
+    head = " ".join(r.text[:160].split())
+    title = re.search(r"<title[^>]*>([^<]{0,80})", r.text, re.I)
+    return (f"HTTP {r.status_code}, {len(r.text)}B, "
+            f"type={r.headers.get('content-type', '?')}, "
+            f"title={title.group(1).strip() if title else 'none'}, starts={head!r}")
+
+
 def discover(session):
     r = get_with_retry(session, FEED, timeout=45)
     found: dict[str, Candidate] = {}
@@ -61,7 +76,7 @@ def discover(session):
         found.setdefault(sid, Candidate(sid, title, _date(_tag(block, "pubDate")), link))
         _BODIES[sid] = _body(block)
     if not found:
-        raise UpstreamUnavailable("PJM Inside Lines feed carried no items")
+        raise UpstreamUnavailable(f"PJM Inside Lines feed carried no items — {_diagnose(r)}")
     return FEED, list(found.values())
 
 
