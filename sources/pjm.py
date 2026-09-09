@@ -12,6 +12,7 @@ governance and FERC-filing news.
 from __future__ import annotations
 
 import re
+import time
 from email.utils import parsedate_to_datetime
 
 from bs4 import BeautifulSoup
@@ -65,19 +66,34 @@ def _diagnose(r) -> str:
 
 
 def discover(session):
-    r = get_with_retry(session, FEED, timeout=45)
-    found: dict[str, Candidate] = {}
-    for block in _ITEM.findall(r.text):
-        title = _tag(block, "title")
-        link = _tag(block, "link")
-        if not title or not link:
-            continue
-        sid = f"pjm-{slugify(link.rstrip('/').split('/')[-1])}"
-        found.setdefault(sid, Candidate(sid, title, _date(_tag(block, "pubDate")), link))
-        _BODIES[sid] = _body(block)
-    if not found:
-        raise UpstreamUnavailable(f"PJM Inside Lines feed carried no items — {_diagnose(r)}")
-    return FEED, list(found.values())
+    """Read the feed, retrying an empty one.
+
+    The feed flaps: two runs three minutes apart returned ten items and then
+    none, from the same runner. An empty body arrives as HTTP 200, so
+    get_with_retry has nothing to react to and the collector declared the
+    source unavailable on roughly half its runs. Under a one-day freshness
+    window those are not delays, they are losses, so an empty read is retried
+    rather than believed first time.
+    """
+    r = None
+    for attempt in range(3):
+        r = get_with_retry(session, FEED, timeout=45)
+        found: dict[str, Candidate] = {}
+        for block in _ITEM.findall(r.text):
+            title = _tag(block, "title")
+            link = _tag(block, "link")
+            if not title or not link:
+                continue
+            sid = f"pjm-{slugify(link.rstrip('/').split('/')[-1])}"
+            found.setdefault(sid, Candidate(sid, title, _date(_tag(block, "pubDate")), link))
+            _BODIES[sid] = _body(block)
+        if found:
+            return FEED, list(found.values())
+        if attempt + 1 < 3:
+            time.sleep(5.0 * (attempt + 1))
+
+    raise UpstreamUnavailable(
+        f"PJM Inside Lines feed carried no items on 3 attempts — {_diagnose(r)}")
 
 
 def is_out_of_scope(candidate: Candidate) -> bool:
