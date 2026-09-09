@@ -41,13 +41,22 @@ editorial review.
 | `pjm-imm` | Monitoring Analytics — PJM IMM (US) | FERC-docket filings + State of the Market recommendations section (PDFs); monitor noise filter |
 | `potomac` | Potomac Economics — MISO/NYISO/ISO-NE/ERCOT monitors (US) | document library per market, current and previous year (PDFs); monitor noise filter |
 
-Deferred: **ERCOT** (ercot.com) — Incapsula blocks plain and rendered fetches alike.
-ERCOT's market is still reached indirectly: Potomac Economics is its independent
-market monitor and its reports are collected under `potomac`.
-Deferred: **Elia** (elia.be) — hard Cloudflare JS challenge on every path; needs a
-real browser (Playwright) to scrape. Most Elia rule changes surface via CREG
-approvals anyway.
+Deferred: **ERCOT** (ercot.com) — Imperva/Incapsula returns 403 to plain
+requests, to the rendered fetch, and to every subdomain tried (`sa.`, `data.`,
+`apiexplorer.`). The Texas PUC interchange, the obvious second route, is behind
+Cloudflare and also refuses. Retested 9 Sept 2026; do not retry without a new
+technique. ERCOT's market is reached indirectly instead: Potomac Economics is
+its independent market monitor and its reports are collected under `potomac`,
+which returns more ERCOT documents than any other market.
 
+Deferred: **Elia** (elia.be) — Cloudflare's managed challenge. Retested 9 Sept
+2026 with three techniques beyond the plain rendered fetch: a longer virtual
+time budget, a warmed profile reused across two passes, and `eliagroup.eu`.
+The challenge never settles, so `--dump-dom` hangs rather than returning a
+page. `opendata.elia.be` is open but carries only grid time series and news
+about the data platform itself. Belgian market-design decisions are still
+covered, because Elia's proposals need CREG approval and `creg` is collected;
+what is missing is Elia's own consultations.
 ## Local usage
 
 ```
