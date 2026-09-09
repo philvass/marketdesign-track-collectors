@@ -97,11 +97,35 @@ CHALLENGE_TITLES = re.compile(
     r"checking your browser|access denied|please wait)", re.I)
 
 
+# A second shape of the same thing. SiteGround answers a rate-limited client
+# with HTTP 202 and a 175-byte page whose only content is a meta refresh to a
+# CAPTCHA path — no title, so the title patterns above never match it. PJM and
+# EPEX both sit behind it.
+CHALLENGE_REDIRECT = re.compile(
+    r"(sgcaptcha|/\.well-known/captcha|__cf_chl|challenge-platform)", re.I)
+
+
 def is_challenge_page(response: requests.Response) -> bool:
     ctype = (response.headers.get("content-type") or "").lower()
     if "html" not in ctype and ctype:
         return False
-    return bool(CHALLENGE_TITLES.search(response.text[:4000]))
+    head = response.text[:4000]
+    if CHALLENGE_TITLES.search(head):
+        return True
+    # 202 with a tiny body is the rate-limit signature; a real page is bigger.
+    return bool(CHALLENGE_REDIRECT.search(head)) or (
+        response.status_code == 202 and len(response.text) < 500)
+
+
+def challenge_reason(response: requests.Response) -> str:
+    """A one-line account of a challenge, for the source-health note."""
+    if CHALLENGE_REDIRECT.search(response.text[:4000]):
+        return (f"rate-limited behind a CAPTCHA challenge (HTTP {response.status_code}, "
+                f"{len(response.text)}B). The publisher is throttling this IP, which on "
+                f"shared CI runners is often not about us. Not bypassable, and not "
+                f"something to bypass; the collector backs off and tries later.")
+    return (f"served a bot-challenge page instead of content "
+            f"(HTTP {response.status_code}, {len(response.text)}B)")
 
 
 def get_with_retry(session: requests.Session, url: str, timeout: int = 30,

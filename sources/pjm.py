@@ -17,7 +17,8 @@ from email.utils import parsedate_to_datetime
 
 from bs4 import BeautifulSoup
 
-from core import Candidate, UpstreamUnavailable, get_with_retry, html_to_text, slugify, MAX_CONTENT_CHARS
+from core import (Candidate, UpstreamUnavailable, challenge_reason, get_with_retry,
+                  html_to_text, is_challenge_page, slugify, MAX_CONTENT_CHARS)
 from sources.us_common import REGION, title_in_scope  # noqa: F401
 
 INSTITUTION = "PJM"
@@ -78,6 +79,13 @@ def discover(session):
     r = None
     for attempt in range(3):
         r = get_with_retry(session, FEED, timeout=45)
+        if is_challenge_page(r):
+            # Throttling, not an empty feed. Backing off further is the only
+            # legitimate response: the challenge is there to be respected.
+            if attempt + 1 < 3:
+                time.sleep(20.0 * (attempt + 1))
+                continue
+            raise UpstreamUnavailable(f"PJM Inside Lines feed {challenge_reason(r)}")
         found: dict[str, Candidate] = {}
         for block in _ITEM.findall(r.text):
             title = _tag(block, "title")
