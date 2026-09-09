@@ -25,7 +25,7 @@ editorial review.
 | `elexon` | Elexon (GB BSC) | BSC WordPress REST API: mod-proposals (by modified) + consultations + news |
 | `arera` | ARERA (IT NRA) | atti-e-provvedimenti listing (Delibera+Consultazione, settore=4, /R/eel+/R/com) |
 | `ceer` | CEER | WordPress REST API: electricity publications (excl. national monitoring) + consultations |
-| `recs` | RECS International | WP REST `news` CPT (NOT `posts` — spam-compromised) + /documents inline JSON |
+| `recs` | RECS International | WP REST `news` CPT (NOT `posts` — spam-compromised) + /documents inline JSON. **Upstream down since ~11 July 2026**: every path returns HTTP 200 with four spaces, archive shows nothing after that date, no successor domain (recsmarket.eu is the conference site). Reports unavailable and exits 0; nothing to fix here. |
 | `energinet` | Energinet (DK TSO) | Umbraco FacetedEnerListApi JSON (news + ancillary-services nodes) |
 | `tennet` | TenneT (NL/DE TSO) | /news __NEXT_DATA__ JSON (teaser-only: article pages are WAF-blocked) |
 | `nordpool` | Nord Pool | exchange-message-list RSS (full bodies inline; UMM/operational feeds never touched) |

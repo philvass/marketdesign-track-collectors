@@ -90,7 +90,12 @@ def discover(session):
     if not found:
         if empty_upstream:
             raise UpstreamUnavailable(
-                "recs.org served an empty response on every discovery path")
+                "recs.org serves HTTP 200 with a 4-byte body (four spaces) on every "
+                "path, robots.txt included, from every client and with no bot layer in "
+                "front. The Internet Archive shows real pages until 11 July 2026 and "
+                "nothing since, so the site is down or being rebuilt at the publisher's "
+                "end. Nothing to fix here; recsmarket.eu is the conference site, not a "
+                "replacement. Re-check occasionally.")
         raise CollectorError("RECS discovery returned no candidates")
     return f"{NEWS_API} + {DOCUMENTS}", list(found.values())
 
