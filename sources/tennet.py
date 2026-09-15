@@ -29,7 +29,8 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
-from core import Candidate, CollectorError, render_html, slugify, MAX_CONTENT_CHARS
+from core import (Candidate, CollectorError, UpstreamUnavailable, render_html,
+                  slugify, MAX_CONTENT_CHARS)
 
 INSTITUTION = "TenneT"
 DOCUMENT_TYPE = "TSO"
@@ -39,6 +40,22 @@ NEWS = f"{BASE}/news"
 MAX_ITEMS = 30
 
 _META_CACHE: dict[str, dict] = {}
+
+# Cloudflare's managed challenge clears for a residential browser but flaps on
+# shared CI-runner IPs. When it does not clear, the rendered fetch returns the
+# ~5KB "Just a moment" interstitial instead of the news page: big enough to pass
+# render_html's empty-document guard, but with no __NEXT_DATA__. That is an
+# upstream block, not a structural change on our side, so it is reported as
+# upstream_unavailable (a soft "backing off", exit 0) rather than a hard error
+# that reddens the monitor. A missing payload on a page that is NOT a challenge
+# still raises the hard error it should.
+_CHALLENGE_MARKERS = re.compile(
+    r"just a moment|enable javascript|cf-mitigated|attention required|"
+    r"cf-browser-verification|challenge-platform", re.I)
+
+
+def _looks_challenged(html: str) -> bool:
+    return len(html) < 20000 and bool(_CHALLENGE_MARKERS.search(html))
 
 
 def _epoch_ms_date(raw) -> str | None:
@@ -53,6 +70,11 @@ def discover(session):
     soup = BeautifulSoup(html, "html.parser")
     script = soup.select_one("script#__NEXT_DATA__")
     if not script or not script.string:
+        if _looks_challenged(html):
+            raise UpstreamUnavailable(
+                "TenneT served a Cloudflare challenge to the rendered fetch "
+                "instead of /news. The managed challenge flaps on shared CI IPs; "
+                "runs where it clears still collect. Backing off, not a bypass.")
         raise CollectorError("TenneT /news has no __NEXT_DATA__ payload")
     try:
         data = json.loads(script.string)
