@@ -35,7 +35,10 @@ MARKET_DESIGN = re.compile(
     # Decision verbs: an approval or rejection is what the monitor exists for.
     r"board approves|governing body approves|board of governors approves|"
     r"ferc approves|ferc accepts|ferc rejects|ferc directs|ferc proposes|"
-    r"ferc orders|ferc issues (?:final|order)|files .* with ferc|files with ferc)", re.I)
+    r"ferc orders|ferc issues (?:final|order)|files .* with ferc|files with ferc|"
+    # Carbon markets (RGGI, California cap-and-trade) as they price power.
+    r"cap-and-trade|cap and trade|allowance auction|emissions? allowance|"
+    r"emissions trading|carbon market|greenhouse gas allowance|\brggi\b)", re.I)
 
 # Recurring announcements that are never a design decision, whatever else
 # the title says.

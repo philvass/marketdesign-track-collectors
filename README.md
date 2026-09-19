@@ -40,6 +40,7 @@ editorial review.
 | `spp` | SPP (US) | press-release listing (dates in the row; articles under /news-list/); US title filter |
 | `pjm-imm` | Monitoring Analytics — PJM IMM (US) | FERC-docket filings + State of the Market recommendations section (PDFs); monitor noise filter |
 | `potomac` | Potomac Economics — MISO/NYISO/ISO-NE/ERCOT monitors (US) | document library per market, current and previous year (PDFs); monitor noise filter |
+| `spp-mmu` | SPP Market Monitoring Unit (US) | the market-monitoring report collections on spp.org (`/spp-documents-filings/?id=`): annual + quarterly State of the Market, frequently-constrained-area studies, MMU reports and comments (PDFs, day-dated in the listing); monitor noise filter |
 | `texas-register` | PUCT via the Texas Register (US) | official weekly issues, last six, filtered to Public Utility Commission items and 16 TAC ch. 25 rule citations |
 | `nerc` | NERC (US) | newsroom via rendered fetch (JS-built listing; not a challenge); reliability-standard ballots/approvals, FERC filings, large-load actions; US title filter |
 | `entsoe-consultations` | ENTSO-E consultation hub (EU) | consultations.entsoe.eu Citizen Space: TSO methodology proposals, one page, no pagination |
@@ -94,6 +95,39 @@ but the signal is there and should be respected.
 Belgian decisions remain covered through `creg`, which approves Elia's
 proposals, and the Central European methodology proposals Elia is party to are
 consulted in the open at `entsoe-consultations`.
+
+### US sources examined and deferred (19 Sept 2026)
+
+Four US sources were probed as candidates and deferred, each for a concrete
+discovery reason, not lack of relevance. Retest only with a new technique.
+
+- **CAISO DMM** (Department of Market Monitoring) — its quarterly/annual reports
+  live only inside `caiso.com/library`, a client-side data grid (415 `data-`
+  attributes, no server-rendered rows, no sitemap slice); the dedicated DMM and
+  report-library paths all 404. It would need a rendered fetch plus a parser for
+  an undocumented grid component, for a modest increment over what `caiso`
+  already collects (CAISO's market-design news is in scope there).
+- **CPUC decisions** — the substance (resource-adequacy, procurement, market
+  proceedings) is in the Oracle APEX application at `apps.cpuc.ca.gov/apex`,
+  which is session/form-driven and not crawlable; `docs.cpuc.ca.gov` timed out;
+  the newsroom is a thin consumer feed. California wholesale market design is
+  covered through `caiso`. A future route would mirror `texas-register`: read
+  CPUC rulemakings from the California Regulatory Notice Register.
+- **RGGI** — no sitemap (404) and no news/newsroom/announcements listing at any
+  probed path (all 404); auction notices and program-review papers are scattered
+  PDFs with no discoverable index. Small program, no crawl surface.
+- **California cap-and-trade (CARB)** — `rulemaking-activity-YYYY` and the
+  cap-and-trade meetings/workshops paths 404; the only sitemap is a two-page,
+  whole-agency firehose (vehicles and air quality dominate) with no per-program
+  slice or lastmod filter. Low volume (major amendments are infrequent). The
+  register route (California Regulatory Notice Register) is the tractable future
+  path, as for CPUC.
+
+The carbon vocabulary in `us_common.MARKET_DESIGN` (cap-and-trade, allowance
+auction, emissions allowance/trading, carbon market, RGGI) is kept regardless,
+so any collected US source that reports a carbon-market decision passes the
+title gate. EU carbon is covered by `dgclima` (EU ETS).
+
 ## Local usage
 
 ```
