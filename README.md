@@ -41,6 +41,7 @@ editorial review.
 | `pjm-imm` | Monitoring Analytics — PJM IMM (US) | FERC-docket filings + State of the Market recommendations section (PDFs); monitor noise filter |
 | `potomac` | Potomac Economics — MISO/NYISO/ISO-NE/ERCOT monitors (US) | document library per market, current and previous year (PDFs); monitor noise filter |
 | `texas-register` | PUCT via the Texas Register (US) | official weekly issues, last six, filtered to Public Utility Commission items and 16 TAC ch. 25 rule citations |
+| `nerc` | NERC (US) | newsroom via rendered fetch (JS-built listing; not a challenge); reliability-standard ballots/approvals, FERC filings, large-load actions; US title filter |
 | `entsoe-consultations` | ENTSO-E consultation hub (EU) | consultations.entsoe.eu Citizen Space: TSO methodology proposals, one page, no pagination |
 | `elia` | Elia (BE TSO) | plain crawl of consultations + press releases under a declared agent, as elia.be/robots.txt permits; the WAF currently answers 403, so runs report `upstream_unavailable` and exit 0 |
 
