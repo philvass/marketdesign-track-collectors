@@ -482,11 +482,25 @@ def choose(candidates: Iterable[Candidate], match: str | None, limit: int) -> li
     return items[:limit]
 
 
+# Regulators date a decision by the day it was adopted, which is routinely days
+# to weeks before the document appears online. The site-wide one-day freshness
+# gate then baselines almost every one of them unseen — CRE and CREG délibéra-
+# tions stopped reaching the desk entirely this way. Give every REGULATOR source
+# a wider first-time window unless it declares its own (EUR-Lex sets 7). This one
+# attribute feeds both the collector's own over-age gate and the max_age_days it
+# sends TRACK, and the worker honours it up to its 30-day cap.
+REGULATOR_MAX_AGE_DAYS = 14
+
+
 def load_source(key: str):
     try:
-        return importlib.import_module(f"sources.{key}")
+        mod = importlib.import_module(f"sources.{key}")
     except ModuleNotFoundError as exc:
         raise CollectorError(f"Unknown source {key!r}: {exc}")
+    if (getattr(mod, "DOCUMENT_TYPE", "") == "REGULATOR"
+            and not isinstance(getattr(mod, "MAX_AGE_DAYS", None), int)):
+        mod.MAX_AGE_DAYS = REGULATOR_MAX_AGE_DAYS
+    return mod
 
 
 def main(argv: list[str] | None = None) -> int:
