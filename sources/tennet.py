@@ -35,6 +35,13 @@ from core import (Candidate, CollectorError, UpstreamUnavailable, render_html,
 INSTITUTION = "TenneT"
 DOCUMENT_TYPE = "TSO"
 
+# /news sits behind a Cloudflare managed challenge that flaps on shared CI-runner
+# IPs, so a given run may be unable to collect for a day or more even though the
+# item is same-day news. Widen the first-time window past the site-wide one day so
+# a new item survives a spell of blocked runs instead of ageing out unseen; the
+# worker honours the wider window this sends, up to its 30-day cap.
+MAX_AGE_DAYS = 4
+
 BASE = "https://www.tennet.eu"
 NEWS = f"{BASE}/news"
 MAX_ITEMS = 30
