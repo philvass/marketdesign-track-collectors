@@ -381,18 +381,37 @@ def report_run(track_url: str, token: str | None, **fields) -> None:
         pass
 
 
-def submit(session: requests.Session, track_url: str, payload: dict, token: str | None = None) -> dict:
+def submit(session: requests.Session, track_url: str, payload: dict,
+           token: str | None = None, attempts: int = 3) -> dict:
     headers = {"Content-Type": "application/json"}
     if token:
         headers["Authorization"] = f"Bearer {token}"
-    r = session.post(track_url, json=payload, headers=headers, timeout=300)
-    try:
-        data = r.json()
-    except ValueError:
-        data = {"raw": r.text[:2000]}
-    if not r.ok:
-        raise CollectorError(f"TRACK returned HTTP {r.status_code}: {json.dumps(data, ensure_ascii=False)}")
-    return data
+    last = None
+    for i in range(attempts):
+        try:
+            r = session.post(track_url, json=payload, headers=headers, timeout=300)
+        except requests.RequestException as exc:
+            # A dropped connection or timeout is transient: back off and retry.
+            last = CollectorError(f"TRACK request failed: {exc}")
+            time.sleep(2 * (i + 1))
+            continue
+        try:
+            data = r.json()
+        except ValueError:
+            data = {"raw": r.text[:2000]}
+        if r.ok:
+            return data
+        msg = f"TRACK returned HTTP {r.status_code}: {json.dumps(data, ensure_ascii=False)}"
+        # Only 5xx is worth retrying — the ingest pipeline runs three model calls
+        # on the heaviest documents and can transiently 500 (an overloaded model,
+        # a Worker timeout). A 4xx is deterministic (auth, validation) and must
+        # surface at once rather than be hammered.
+        if r.status_code >= 500 and i < attempts - 1:
+            last = CollectorError(msg)
+            time.sleep(2 * (i + 1))
+            continue
+        raise CollectorError(msg)
+    raise last or CollectorError("TRACK submit failed after retries")
 
 
 def mark_submitted(db: sqlite3.Connection, source_id: str, response: dict) -> None:
@@ -543,6 +562,7 @@ def main(argv: list[str] | None = None) -> int:
     max_age_days = getattr(source, "MAX_AGE_DAYS", args.max_age_days)
 
     results = []
+    submit_failures = 0
     for candidate in selected:
         try:
             if out_of_scope(candidate):
@@ -618,19 +638,37 @@ def main(argv: list[str] | None = None) -> int:
             mark_bootstrapped(db, candidate.source_id)
             item["stale_baselined"] = True
         elif args.submit and not duplicate:
-            response = submit(session, args.track_url, payload, args.token)
-            mark_submitted(db, candidate.source_id, response)
-            item["submitted"] = True
-            item["track_response"] = response
+            try:
+                response = submit(session, args.track_url, payload, args.token)
+                mark_submitted(db, candidate.source_id, response)
+                item["submitted"] = True
+                item["track_response"] = response
+                submit_failures = 0
+            except CollectorError as exc:
+                # One document's failure must not abort the run and skip every
+                # document after it — the crash that stalled the CRE backfill
+                # mid-batch. submitted_at is left NULL (is_unchanged requires it),
+                # so the next run retries this document. But a run-wide failure
+                # (revoked token, worker down) fails identically on every
+                # document; after three in a row, stop and surface it rather than
+                # log the same error 25 times.
+                item["submit_error"] = str(exc)[:300]
+                submit_failures += 1
+                if submit_failures >= 3:
+                    results.append(item)
+                    raise
             time.sleep(2.0)
         results.append(item)
 
+    submit_errors = [r for r in results if r.get("submit_error")]
     report_run(args.track_url, args.token, source=args.source,
                institution=getattr(source, "INSTITUTION", ""),
                region=getattr(source, "REGION", "EU"),
                mode=("BOOTSTRAP" if args.bootstrap_state else ("SUBMIT" if args.submit else "DRY_RUN")),
                ok=True, discovered=len(discovered), processed=len(results),
                submitted=sum(1 for r in results if r.get("submitted")),
+               note=(f"{len(submit_errors)} document(s) failed to submit, left for the next run: "
+                     f"{submit_errors[0]['submit_error']}" if submit_errors else None),
                collector_version=VERSION)
 
     summary = {
