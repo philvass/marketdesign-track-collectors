@@ -50,19 +50,44 @@ _META_CACHE: dict[str, dict] = {}
 
 # Cloudflare's managed challenge clears for a residential browser but flaps on
 # shared CI-runner IPs. When it does not clear, the rendered fetch returns the
-# ~5KB "Just a moment" interstitial instead of the news page: big enough to pass
-# render_html's empty-document guard, but with no __NEXT_DATA__. That is an
-# upstream block, not a structural change on our side, so it is reported as
-# upstream_unavailable (a soft "backing off", exit 0) rather than a hard error
-# that reddens the monitor. A missing payload on a page that is NOT a challenge
-# still raises the hard error it should.
-_CHALLENGE_MARKERS = re.compile(
+# "Just a moment" interstitial instead of the news page, with no __NEXT_DATA__.
+# That is an upstream block, not a structural change on our side, so it is
+# reported as upstream_unavailable (a soft "backing off", exit 0) rather than a
+# hard error that reddens the monitor. A missing payload on a page that is NOT
+# a challenge still raises the hard error it should.
+#
+# Two tiers, because the first version of this check missed on CI for weeks.
+# It required the document to be under 20KB, which holds for the interstitial
+# as served but not necessarily for its DOM once the challenge script has run
+# inside the renderer. The strong markers below only ever appear on a
+# Cloudflare challenge, so they decide on their own at any size. The weak ones
+# are things a real page can carry, so they still need the page to be small:
+# the live /news itself loads /cdn-cgi/challenge-platform/scripts/jsd/, which is
+# why a bare "challenge-platform" must not count as strong.
+_STRONG_CHALLENGE = re.compile(
+    r"_cf_chl_opt|cdn-cgi/challenge-platform/h/|cf-browser-verification|"
+    r"<title>\s*just a moment", re.I)
+_WEAK_CHALLENGE = re.compile(
     r"just a moment|enable javascript|cf-mitigated|attention required|"
-    r"cf-browser-verification|challenge-platform", re.I)
+    r"challenge-platform|access denied|error 10\d\d", re.I)
 
 
 def _looks_challenged(html: str) -> bool:
-    return len(html) < 20000 and bool(_CHALLENGE_MARKERS.search(html))
+    if _STRONG_CHALLENGE.search(html):
+        return True
+    return len(html) < 20000 and bool(_WEAK_CHALLENGE.search(html))
+
+
+def _describe(html: str) -> str:
+    """What the renderer actually got, for the health note. A missing payload
+    with no account of the page is undiagnosable from the run log, which is how
+    the check above stayed wrong unnoticed."""
+    soup = BeautifulSoup(html, "html.parser")
+    title = " ".join((soup.title.get_text() if soup.title else "").split())[:80]
+    for tag in soup(["script", "style", "noscript"]):
+        tag.decompose()
+    text = " ".join(soup.get_text(" ", strip=True).split())[:160]
+    return f"{len(html)} chars, title {title!r}, text {text!r}"
 
 
 def _epoch_ms_date(raw) -> str | None:
@@ -82,7 +107,8 @@ def discover(session):
                 "TenneT served a Cloudflare challenge to the rendered fetch "
                 "instead of /news. The managed challenge flaps on shared CI IPs; "
                 "runs where it clears still collect. Backing off, not a bypass.")
-        raise CollectorError("TenneT /news has no __NEXT_DATA__ payload")
+        raise CollectorError(
+            f"TenneT /news has no __NEXT_DATA__ payload ({_describe(html)})")
     try:
         data = json.loads(script.string)
         edges = data["props"]["pageProps"]["news"]["edges"]

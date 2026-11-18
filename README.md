@@ -27,7 +27,7 @@ editorial review.
 | `ceer` | CEER | WordPress REST API: electricity publications (excl. national monitoring) + consultations |
 | `recs` | RECS International | WP REST `news` CPT (NOT `posts` — spam-compromised) + /documents inline JSON. **Upstream down since ~11 July 2026**: every path returns HTTP 200 with four spaces, archive shows nothing after that date, no successor domain (recsmarket.eu is the conference site). Reports unavailable and exits 0; nothing to fix here. |
 | `energinet` | Energinet (DK TSO) | Umbraco FacetedEnerListApi JSON (news + ancillary-services nodes) |
-| `tennet` | TenneT (NL/DE TSO) | /news __NEXT_DATA__ JSON (teaser-only: article pages are WAF-blocked) |
+| `tennet` | TenneT (NL/DE TSO) | /news __NEXT_DATA__ JSON via rendered fetch (teaser-only: article pages are WAF-blocked). Cloudflare's managed challenge flaps on CI IPs; a challenged run reports `upstream_unavailable` and exits 0, and any other missing payload fails with a description of the page it got |
 | `nordpool` | Nord Pool | exchange-message-list RSS (full bodies inline; UMM/operational feeds never touched) |
 | `omie` | OMIE | notas-de-prensa listing (PDFs; monthly price reports excluded) |
 | `gme` | GME | electricity news archive (results-noise filtered) + DTF technical rules |
@@ -41,7 +41,7 @@ editorial review.
 | `pjm-imm` | Monitoring Analytics — PJM IMM (US) | FERC-docket filings + State of the Market recommendations section (PDFs); monitor noise filter |
 | `potomac` | Potomac Economics — MISO/NYISO/ISO-NE/ERCOT monitors (US) | document library per market, current and previous year (PDFs); monitor noise filter |
 | `spp-mmu` | SPP Market Monitoring Unit (US) | the market-monitoring report collections on spp.org (`/spp-documents-filings/?id=`): annual + quarterly State of the Market, frequently-constrained-area studies, MMU reports and comments (PDFs, day-dated in the listing); monitor noise filter |
-| `texas-register` | PUCT via the Texas Register (US) | official weekly issues, last six, filtered to Public Utility Commission items and 16 TAC ch. 25 rule citations |
+| `texas-register` | Public Utility Commission of Texas (US) | puc.texas.gov Proposed Rule Changes (plain-language summaries) + Recent Rule Changes (adopted rules with effective dates), 16 TAC ch. 25 only. US-only site: works on CI, 403 from Europe. The key is historical: the Texas Register itself has been behind an AWS WAF CAPTCHA since late Oct 2026 and is no longer read |
 | `nerc` | NERC (US) | newsroom via rendered fetch (JS-built listing; not a challenge); reliability-standard ballots/approvals, FERC filings, large-load actions; US title filter |
 | `entsoe-consultations` | ENTSO-E consultation hub (EU) | consultations.entsoe.eu Citizen Space: TSO methodology proposals, one page, no pagination |
 | `elia` | Elia (BE TSO) | plain crawl of consultations + press releases under a declared agent, as elia.be/robots.txt permits; the WAF currently answers 403, so runs report `upstream_unavailable` and exit 0 |
@@ -49,17 +49,20 @@ editorial review.
 Deferred: **ERCOT** (ercot.com) — Imperva/Incapsula returns 403 to plain
 requests, to the rendered fetch, and to every subdomain tried (`sa.`, `data.`,
 `apiexplorer.`, `api.`). Even `robots.txt` is refused, so ERCOT publishes no
-machine-readable statement of what it permits. The Texas PUC interchange and
-`puc.texas.gov` are behind Cloudflare and also refuse. `developer.ercot.com`
-is open but documents the market-participant transaction APIs, which need
-certificates and carry no publications. Retested 9 Sept 2026; do not retry
-without a new technique.
+machine-readable statement of what it permits. `developer.ercot.com` is open
+but documents the market-participant transaction APIs, which need certificates
+and carry no publications. Retested 9 Sept 2026; do not retry without a new
+technique.
 
 ERCOT's market design is covered by two open routes instead. `texas-register`
-reads the Secretary of State's official weekly publication, where PUCT
-rulemakings — the decisions that actually change ERCOT's market — must appear
-before they take effect; this is the Texan equivalent of the Federal Register
-route used for FERC. `potomac` collects ERCOT's independent market monitor and
+reads the Public Utility Commission of Texas, whose rulemakings are the
+decisions that actually change ERCOT's market: its proposed-rule summaries and
+its table of adopted rules. `puc.texas.gov` allows every agent in robots.txt
+but answers only from inside the United States, so it must be tested on CI,
+not from a European machine (which is why it was once recorded here as
+refusing). The Texas Register, the route this key was named for, went behind
+an AWS WAF CAPTCHA in late October 2026; a CAPTCHA is not worked around.
+`potomac` collects ERCOT's independent market monitor and
 returns more ERCOT documents than any other market.
 
 **Elia** (elia.be) — an adapter now exists and runs, because elia.be/robots.txt

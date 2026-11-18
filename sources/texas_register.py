@@ -1,16 +1,33 @@
-"""Texas Register — the official publication for Texas rulemakings.
+"""Public Utility Commission of Texas — the rulemakings that change ERCOT.
 
 ERCOT itself cannot be collected: its site refuses every automated request.
 But the decisions that change ERCOT's market design are made by the Public
-Utility Commission of Texas, and a PUCT rulemaking is not effective until it
-is published here. So the Texas Register is to ERCOT what the Federal
-Register is to FERC, and it is published in the open by the Secretary of
-State with no protection of any kind.
+Utility Commission of Texas, so the commission's rulemakings are the route.
 
-Electricity rules are Title 16 of the Texas Administrative Code (Economic
-Regulation), chapter 25. The commission does not file every week, so
-discovery reads the last few weekly issues rather than only the current one:
-an issue with no utility item is normal, not a failure.
+This adapter used to read them from the Texas Register, the Secretary of
+State's weekly publication. In late October 2026 the Secretary of State moved
+sos.state.tx.us behind AWS WAF, which now answers every request from a CI
+runner — robots.txt included — with HTTP 405 and a "Human Verification"
+CAPTCHA. A CAPTCHA is an explicit humans-only gate, so it is not rendered
+around, solved or routed past, and the Register's replacement portal is a
+form-driven application with no listing to read. The source key is still
+`texas-register` so the state cache, the workflow matrix and the source-health
+history carry on unbroken.
+
+The commission publishes the same decisions itself, earlier and more usefully,
+and its robots.txt allows every agent (`User-agent: * / Allow: /`):
+
+1. Proposed Rule Changes: the plain-language summary the commission must post
+   when it files a proposal (Tex. Gov. Code 2001.023), one card per project.
+2. Recent Rule Changes: every adopted rule with its project number and
+   effective date, linking the rule text as adopted.
+
+puc.texas.gov answers only from inside the United States. The CI runners are
+there, so it works in the workflow; from a European machine it returns 403,
+which is why an earlier test recorded the site as refusing. Run it on CI.
+
+Electricity rules are Title 16 of the Texas Administrative Code, chapter 25.
+Water (24), telecoms (26) and procedure (22) share both pages and are dropped.
 """
 from __future__ import annotations
 
@@ -20,95 +37,161 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, UpstreamUnavailable, get_with_retry, html_to_text,
+from core import (Candidate, CollectorError, get_with_retry, extract_pdf_text,
                   slugify, MAX_CONTENT_CHARS)
 from sources.us_common import REGION  # noqa: F401
 
 INSTITUTION = "Public Utility Commission of Texas"
 DOCUMENT_TYPE = "REGULATOR"
 
-BASE = "https://www.sos.state.tx.us"
-ARCHIVE = f"{BASE}/texreg/archive/index.shtml"
-ISSUES = 6                      # weekly, so about six weeks of cover
+BASE = "https://www.puc.texas.gov"
+PROPOSED = f"{BASE}/agency/rulesnlaws/language/"
+RECENT = f"{BASE}/agency/rulesnlaws/recent/"
+DOCKET = ("https://interchange.puc.texas.gov/search/filings/?UtilityType=A"
+          "&ControlNumber={project}&ItemMatch=Equal&DocumentType=ALL&SortOrder=Ascending")
 
-_ISSUE = re.compile(r"/archive/([A-Za-z]+\d{1,2}\d{4})/index\.html", re.I)
-_ISSUE_DATE = re.compile(r"([A-Za-z]+)\s+(\d{1,2}),\s+(20\d{2})")
-# The commission's own name, and its rules, which are Title 16 chapter 25.
-_PUC = re.compile(r"public utility commission", re.I)
-_RULE_CITE = re.compile(r"16\s+TAC\s+§+\s*25\.", re.I)
-# Electricity sits in Title 16 alongside other economic regulation.
-_ECON_SECTION = re.compile(r"16\.ECONOMIC", re.I)
+# The recent-changes table keeps two years; only its head can ever be fresh.
+MAX_ADOPTED = 12
+MAX_RULE_PDFS = 3
+
+_ELECTRIC_RULE = re.compile(r"§+\s*25\.\d")
+_OTHER_RULE = re.compile(r"§+\s*2[2-46]\.\d")
+_ELECTRIC_WORDS = re.compile(
+    r"\bERCOT\b|electric|large load|transmission service|ancillary|"
+    r"retail electric|generation resource|energy storage", re.I)
+_SPANISH = re.compile(r"\bSpanish summary\s*:", re.I)
+
+_CACHE: dict[str, dict] = {}
 
 
-def _issue_date(label: str) -> str | None:
-    m = _ISSUE_DATE.search(label or "")
-    if not m:
-        return None
-    try:
-        return datetime.strptime(f"{m.group(1)} {m.group(2)} {m.group(3)}", "%B %d %Y").date().isoformat()
-    except ValueError:
-        return None
+def _us_date(raw: str) -> str | None:
+    raw = (raw or "").strip()
+    for fmt in ("%m/%d/%Y", "%m/%d/%y"):
+        try:
+            return datetime.strptime(raw, fmt).date().isoformat()
+        except ValueError:
+            continue
+    return None
+
+
+def _clean(node) -> str:
+    return " ".join(node.get_text(" ", strip=True).split())
+
+
+def _proposed(session) -> list[Candidate]:
+    r = get_with_retry(session, PROPOSED, timeout=60)
+    soup = BeautifulSoup(r.text, "html.parser")
+    heads = soup.select('[id^="PRJ-"]')
+    out = []
+    for h in heads:
+        project = h["id"].split("-", 1)[1].strip()
+        heading = _clean(h)
+        subject = heading.split("|", 1)[1].strip() if "|" in heading else heading
+        body = h.find_parent(class_="card-body") or h.parent
+        text = body.get_text("\n", strip=True)
+        # The Spanish summary restates the English one; the analysis needs one.
+        m = _SPANISH.search(text)
+        english = (text[:m.start()] if m else text).strip()
+        if not (_ELECTRIC_RULE.search(heading) or
+                (_ELECTRIC_WORDS.search(english) and not _OTHER_RULE.search(heading))):
+            continue
+        sid = f"puct-proposed-{slugify(project)}"
+        _CACHE[sid] = {"text": (
+            f"Public Utility Commission of Texas — proposed rule change, Project {project}\n"
+            f"{subject}\n\n"
+            f"Status: proposal for publication, open for comment. Plain-language summary "
+            f"published by the commission under Tex. Gov. Code 2001.023.\n"
+            f"Docket: {DOCKET.format(project=project)}\n\n{english}")}
+        # The page carries no dates. An undated candidate is never over-age, so
+        # a proposal is reported once, when its card first appears.
+        out.append(Candidate(sid, f"PUCT proposed rule, Project {project}: {subject}",
+                             None, f"{PROPOSED}#PRJ-{project}"))
+    return out
+
+
+def _adopted(session) -> list[Candidate]:
+    r = get_with_retry(session, RECENT, timeout=60)
+    soup = BeautifulSoup(r.text, "html.parser")
+    rows = soup.select("table tbody tr")
+    if not rows:
+        raise CollectorError("PUCT Recent Rule Changes has no table rows: markup changed")
+
+    # One rulemaking amends several rules on one date; report it as one item.
+    projects: dict[tuple[str, str], dict] = {}
+    for tr in rows:
+        cells = tr.find_all("td")
+        if len(cells) < 4:
+            continue
+        project, rule, title = _clean(cells[0]), _clean(cells[1]), _clean(cells[2]).rstrip(". ")
+        effective = _us_date(_clean(cells[3]))
+        if not project or not rule:
+            continue
+        link = cells[1].find("a", href=True)
+        entry = projects.setdefault((project, effective or ""), {
+            "project": project, "effective": effective, "rules": []})
+        entry["rules"].append((rule, title, urljoin(RECENT, link["href"]) if link else None))
+
+    out = []
+    for entry in projects.values():
+        electric = [x for x in entry["rules"] if _ELECTRIC_RULE.search(x[0])]
+        if not electric:
+            continue
+        entry["rules"] = electric
+        project = entry["project"]
+        sid = f"puct-adopted-{slugify(project)}-{entry['effective'] or 'undated'}"
+        _CACHE[sid] = entry
+        subject = "; ".join(f"{rule} {title}" for rule, title, _ in electric[:3])
+        if len(electric) > 3:
+            subject += f"; and {len(electric) - 3} more"
+        out.append(Candidate(sid, f"PUCT adopted rule, Project {project}: {subject}",
+                             entry["effective"], DOCKET.format(project=project)))
+        if len(out) >= MAX_ADOPTED:
+            break
+    return out
 
 
 def discover(session):
-    r = get_with_retry(session, ARCHIVE, timeout=60)
-    soup = BeautifulSoup(r.text, "html.parser")
-
-    issues = []
-    for a in soup.select("a[href]"):
-        m = _ISSUE.search(a["href"])
-        if m:
-            issues.append((urljoin(BASE, a["href"]), _issue_date(a.get_text(" ", strip=True)), m.group(1)))
-    if not issues:
-        raise UpstreamUnavailable("Texas Register archive listed no issues")
-
     found: dict[str, Candidate] = {}
-    for url, published, slug in issues[:ISSUES]:
+    errors = []
+    for name, route in (("proposed", _proposed), ("adopted", _adopted)):
         try:
-            ir = get_with_retry(session, url, timeout=60)
-        except Exception:
-            continue
-        isoup = BeautifulSoup(ir.text, "html.parser")
-        anchors = isoup.select("a[href]")
-        cites, agency = [], []
-        for i, a in enumerate(anchors):
-            href = a["href"]
-            label = " ".join(a.get_text(" ", strip=True).split())
-            if _ECON_SECTION.search(href) and _RULE_CITE.search(label):
-                # The index runs agency, then subject, then rule number, so
-                # the two entries above a citation name what it is about.
-                context = [" ".join(anchors[j].get_text(" ", strip=True).split())
-                           for j in range(max(0, i - 2), i)]
-                subject = " — ".join(c for c in context if c and not _RULE_CITE.search(c))
-                cites.append((label, subject, urljoin(url, href)))
-            elif _PUC.search(label):
-                agency.append((label, "", urljoin(url, href)))
-
-        # A rule citation says what actually changed; the agency heading is
-        # the same page with a vaguer name, so it is only a fallback.
-        for label, subject, target in (cites or agency):
-            title = f"Texas Register: {subject} ({label})" if subject else f"Texas Register: {label}"
-            sid = f"texreg-{slug.lower()}-{slugify(label)[:60]}"
-            found.setdefault(sid, Candidate(sid, title, published, target))
-
+            for c in route(session):
+                found.setdefault(c.source_id, c)
+        except CollectorError as exc:
+            errors.append(f"{name}: {exc}")
     if not found:
-        # Six quiet weeks is unusual but not an error: the commission simply
-        # did not file. Reporting an outage here would cry wolf.
-        raise UpstreamUnavailable(
-            f"No Public Utility Commission items in the last {ISSUES} Texas Register issues")
-    return ARCHIVE, list(found.values())
+        # The adopted table always holds chapter 25 rows, so nothing at all
+        # means the pages failed or changed, not that the commission was quiet.
+        raise CollectorError("PUCT discovery found nothing. " + " | ".join(errors)[:300])
+    return f"{PROPOSED} + {RECENT}", list(found.values())
 
 
 def fetch_content(session, candidate: Candidate) -> str:
-    page, _, anchor = candidate.url.partition("#")
-    r = get_with_retry(session, page, timeout=90)
-    soup = BeautifulSoup(r.text, "html.parser")
-    text = html_to_text(soup)
+    entry = _CACHE.get(candidate.source_id)
+    if entry is None:
+        raise CollectorError(f"No discovery record for {candidate.source_id}")
+    if "text" in entry:
+        return entry["text"][:MAX_CONTENT_CHARS]
 
-    # A section page holds every agency that filed under that title, so slice
-    # to the commission's own part rather than handing the analysis the lot.
-    m = _PUC.search(text)
-    if m:
-        start = max(0, m.start() - 200)
-        text = text[start:start + MAX_CONTENT_CHARS]
-    return text[:MAX_CONTENT_CHARS]
+    rules = entry["rules"]
+    parts = [
+        f"Public Utility Commission of Texas — adopted rule change, Project {entry['project']}",
+        f"Effective / reviewed date: {entry['effective'] or 'not stated'}",
+        "Rules adopted or amended in this project (16 Texas Administrative Code, chapter 25, "
+        "the commission's substantive rules for electric service providers):",
+        "\n".join(f"- {rule} {title}" for rule, title, _ in rules),
+        f"Docket: {DOCKET.format(project=entry['project'])}",
+        "The text below is each rule as it now stands after adoption.",
+    ]
+    budget = (MAX_CONTENT_CHARS - 1500) // min(len(rules), MAX_RULE_PDFS)
+    for rule, title, url in rules[:MAX_RULE_PDFS]:
+        if not url:
+            continue
+        try:
+            pdf = get_with_retry(session, url, timeout=90)
+            text = extract_pdf_text(pdf.content, max_chars=budget).strip()
+        except Exception:
+            continue                # the header alone still reports the adoption
+        if text:
+            parts.append(f"===== {rule} {title} =====\n{text[:budget]}")
+    return "\n\n".join(parts)[:MAX_CONTENT_CHARS]
