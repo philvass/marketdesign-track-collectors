@@ -76,14 +76,12 @@ Each adapter's own docstring records the route it reads and what it leaves out.
 | `ei` | Energimarknadsinspektionen (Ei) | REGULATOR | Energimarknadsinspektionen (Ei) — the Swedish energy markets regulator. |
 | `elering` | Elering | TSO | Elering — the Estonian electricity and gas transmission system operator. |
 | `eles` | ELES | TSO | ELES — the Slovenian electricity transmission system operator. |
-| `energy-community` | Energy Community Secretariat | REGULATOR | Energy Community Secretariat — the Vienna-based institution that extends the EU's energy acquis to the Western Balkans, Ukraine, Moldova and Georgia. |
 | `erse` | ERSE | REGULATOR | ERSE — Entidade Reguladora dos Serviços Energéticos, the Portuguese energy regulator. |
 | `eru` | ERÚ (Energetický regulační úřad) | REGULATOR | ERÚ (Energetický regulační úřad) — the Czech energy regulator. |
 | `eso` | ESO EAD (Bulgaria) | TSO | ESO EAD — Електроенергиен системен оператор, the Bulgarian electricity transmission system operator. |
 | `fingrid` | Fingrid | TSO | Fingrid — the Finnish transmission system operator. |
 | `forsyningstilsynet` | Forsyningstilsynet | REGULATOR | Forsyningstilsynet — the Danish Utility Regulator. |
 | `fr-gov` | French Ministry for Energy (DGEC) | GOVERNMENT | French energy ministry (DGEC) — public consultations on draft regulations. |
-| `gr-gov` | YPEN (Greek Ministry of Environment and Energy) | GOVERNMENT | YPEN — the Greek Ministry of Environment and Energy. |
 | `henex` | HEnEx (Hellenic Energy Exchange) | MARKET_OPERATOR | HEnEx — the Hellenic Energy Exchange (EnEx Group), operator of the Greek day-ahead, intraday and energy derivatives markets, with its clearing house EnExClear. |
 | `hera` | HERA (Croatia) | REGULATOR | HERA — the Croatian Energy Regulatory Agency. |
 | `hops` | HOPS | TSO | HOPS — the Croatian transmission system operator. |
@@ -114,7 +112,6 @@ Each adapter's own docstring records the route it reads and what it leaves out.
 | `semo` | SEMO / SEMOpx | MARKET_OPERATOR | SEMO and SEMOpx — the market operator of the all-island Single Electricity Market (balancing market and capacity market) and its day-ahead and intraday exchange. Both are |
 | `seps` | SEPS (Slovenská elektrizačná prenosová sústava) | TSO | SEPS (Slovenská elektrizačná prenosová sústava) — the Slovak transmission system operator. |
 | `si-gov` | Ministry of Infrastructure and Energy (Slovenia) | GOVERNMENT | Slovenian Ministry of Infrastructure and Energy (Ministrstvo za infrastrukturo in energetiko), on the government portal gov.si. |
-| `sk-gov` | Slovak Ministry of Economy (MH SR) | GOVERNMENT | Slovak Ministry of Economy (Ministerstvo hospodárstva SR, MH SR). |
 | `soni` | SONI | TSO | SONI — the electricity transmission system operator for Northern Ireland and, with EirGrid, operator of the all-island market and system. |
 | `sprk` | SPRK (Latvian Public Utilities Commission) | REGULATOR | SPRK — Sabiedrisko pakalpojumu regulēšanas komisija, the Latvian Public Utilities Commission and national energy regulator. |
 | `statnett` | Statnett | TSO | Statnett — the Norwegian transmission system operator. |
@@ -141,6 +138,9 @@ Not collected, and why:
   registered, since documents are passed to a language model): `cera` (CY),
   `litgrid` (LT), `ie_gov` (gov.ie). Register them only on a decision that this
   use is acceptable to the publisher.
+- **Refused from the CI runners** (403 or 500 there, though readable from a European
+  address; adapters written, not registered): `energy_community`, `gr_gov` (ypen.gov.gr),
+  `sk_gov` (economy.gov.sk). Retest from CI before registering.
 - **Nothing to collect**: REWS (MT).
 
 Deferred: **ERCOT** (ercot.com) — Imperva/Incapsula returns 403 to plain
