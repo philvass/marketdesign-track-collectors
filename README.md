@@ -44,6 +44,9 @@ editorial review.
 | `texas-register` | Public Utility Commission of Texas (US) | puc.texas.gov Proposed Rule Changes (plain-language summaries) + Recent Rule Changes (adopted rules with effective dates), 16 TAC ch. 25 only. US-only site: works on CI, 403 from Europe. The key is historical: the Texas Register itself has been behind an AWS WAF CAPTCHA since late Oct 2026 and is no longer read |
 | `nerc` | NERC (US) | newsroom via rendered fetch (JS-built listing; not a challenge); reliability-standard ballots/approvals, FERC filings, large-load actions; US title filter |
 | `entsoe-consultations` | ENTSO-E consultation hub (EU) | consultations.entsoe.eu Citizen Space: TSO methodology proposals, one page, no pagination |
+| `swissgrid` | Swissgrid (CH TSO) | newsroom feed page, server-rendered cards (corporate items dropped by title) |
+| `elcom` | ElCom (CH NRA) | Mitteilungen + Weisungen document lists on elcom.admin.ch (PDFs, first 12 each, German edition); the Verfügungen case list is deliberately not read |
+| `bfe` | Swiss Federal Office of Energy and DETEC (CH) | federal news service feed for the energy office (German edition), electricity filter; teaser-only because admin.ch article pages refuse automated requests. Fetch it once per run: the service drops connections under repeated requests |
 | `elia` | Elia (BE TSO) | plain crawl of consultations + press releases under a declared agent, as elia.be/robots.txt permits; the WAF currently answers 403, so runs report `upstream_unavailable` and exit 0 |
 
 Deferred: **ERCOT** (ercot.com) — Imperva/Incapsula returns 403 to plain
