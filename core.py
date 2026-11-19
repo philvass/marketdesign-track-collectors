@@ -550,6 +550,15 @@ def main(argv: list[str] | None = None) -> int:
 
     session = make_session()
     db = init_db(state_path)
+    # A source with no state at all is on its first run. Submitting then would
+    # push everything it published in its freshness window through the pipeline
+    # at once, which for a batch of new sources is weeks of backlog on the
+    # editor's desk in one morning. The first run therefore only records what
+    # exists; the source reports from its second run on. The same rule covers a
+    # lost state cache, at the cost of one run's news for that source.
+    first_run = False
+    if args.submit and db.execute("SELECT COUNT(*) FROM acquired_documents").fetchone()[0] == 0:
+        args.submit, args.bootstrap_state, first_run = False, True, True
     discovery_url, discovered = source.discover(session)
     selected = choose(discovered, args.match, max(1, args.limit))
     if not selected:
@@ -678,6 +687,7 @@ def main(argv: list[str] | None = None) -> int:
         "institution": source.INSTITUTION,
         "mode": "BOOTSTRAP" if args.bootstrap_state else ("SUBMIT" if args.submit else "DRY_RUN"),
         "discovery_source": discovery_url,
+        "first_run_baseline": first_run,
         "discovered_count": len(discovered),
         "processed_count": len(results),
         "results": results,
