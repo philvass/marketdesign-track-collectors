@@ -549,16 +549,23 @@ def main(argv: list[str] | None = None) -> int:
     state_path = Path(args.state or os.getenv("COLLECTOR_STATE") or f"./state/{args.source}.sqlite3")
 
     session = make_session()
+    # A source whose state file does not exist yet is on its first run.
+    # Submitting then would push everything it published in its freshness
+    # window through the pipeline at once, which for a batch of new sources is
+    # weeks of backlog on the editor's desk in one morning. The first run
+    # therefore only records what exists; the source reports from its second
+    # run on. The same rule covers a lost state cache, at the cost of one run's
+    # news for that source.
+    #
+    # The test is the FILE, not the row count. Sources behind a strict title
+    # filter (the US ISOs, the small ministries) can run for weeks without
+    # recording a single document, so an empty table is their normal state: a
+    # row-count test put them back in baseline mode on every run, which would
+    # have swallowed the first document they ever let through.
+    first_run = bool(args.submit and not state_path.exists())
     db = init_db(state_path)
-    # A source with no state at all is on its first run. Submitting then would
-    # push everything it published in its freshness window through the pipeline
-    # at once, which for a batch of new sources is weeks of backlog on the
-    # editor's desk in one morning. The first run therefore only records what
-    # exists; the source reports from its second run on. The same rule covers a
-    # lost state cache, at the cost of one run's news for that source.
-    first_run = False
-    if args.submit and db.execute("SELECT COUNT(*) FROM acquired_documents").fetchone()[0] == 0:
-        args.submit, args.bootstrap_state, first_run = False, True, True
+    if first_run:
+        args.submit, args.bootstrap_state = False, True
     discovery_url, discovered = source.discover(session)
     selected = choose(discovered, args.match, max(1, args.limit))
     if not selected:
@@ -734,6 +741,19 @@ if __name__ == "__main__":
         token = _argv_value("--token", os.getenv("TRACK_INGEST_TOKEN"))
         source_name = _argv_value("--source", "unknown")
         unavailable = getattr(exc, "upstream_unavailable", False)
+        # A quiet run is not an outage. A source whose own filter kept nothing
+        # of the items it read says so with `quiet_seen`; it is reported as a
+        # healthy run that read that many items and submitted none, so the
+        # source-health page does not mark a ministry's ordinary Tuesday as
+        # "unavailable".
+        quiet_seen = getattr(exc, "quiet_seen", None)
+        if quiet_seen is not None:
+            report_run(track_url, token, source=source_name, ok=True,
+                       discovered=int(quiet_seen), processed=0, submitted=0,
+                       note=None, collector_version=VERSION)
+            print(json.dumps({"ok": True, "collector_version": VERSION,
+                              "skipped": "quiet_run", "detail": str(exc)}, ensure_ascii=False))
+            raise SystemExit(0)
         report_run(track_url, token, source=source_name, ok=not unavailable,
                    discovered=0, processed=0, submitted=0,
                    note=str(exc)[:400], collector_version=VERSION)
