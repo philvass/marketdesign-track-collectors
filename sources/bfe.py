@@ -48,8 +48,14 @@ _META: dict[str, dict] = {}
 
 
 def _date(raw: str | None) -> str | None:
+    raw = (raw or "").strip()
+    if not raw:
+        return None
+    m = re.match(r"(\d{4})-(\d{2})-(\d{2})", raw)      # the feed uses ISO dates, not RFC 822
+    if m:
+        return f"{m.group(1)}-{m.group(2)}-{m.group(3)}"
     try:
-        return parsedate_to_datetime(raw).date().isoformat() if raw else None
+        return parsedate_to_datetime(raw).date().isoformat()
     except (TypeError, ValueError):
         return None
 
