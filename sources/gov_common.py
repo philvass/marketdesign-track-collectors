@@ -64,6 +64,14 @@ _CEREMONIAL = re.compile(
     r"uuring|študij|studie zeigt|tanulmány|pētījum", re.I)
 
 
+class QuietRun(UpstreamUnavailable):
+    """The source was read and nothing in it is market design: a normal day."""
+
+    def __init__(self, message: str, seen: int):
+        super().__init__(message)
+        self.quiet_seen = seen
+
+
 def is_market_design(title: str) -> bool:
     t = title or ""
     return bool(_POWER.search(t) and _INSTRUMENT.search(t) and not _CEREMONIAL.search(t))
@@ -75,7 +83,8 @@ def market_design_only(discover, institution: str):
         url, candidates = discover(session)
         kept = [c for c in candidates if is_market_design(c.title)]
         if not kept:
-            raise UpstreamUnavailable(
-                f"No market-design item among {len(candidates)} {institution} energy items this run")
+            raise QuietRun(
+                f"No market-design item among {len(candidates)} {institution} energy items this run",
+                len(candidates))
         return url, kept
     return wrapped

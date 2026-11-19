@@ -62,8 +62,14 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: state
-          key: state-${{ matrix.source }}-${{ github.run_id }}
+          # The key ends the source name with "_" so that one source's prefix
+          # cannot match another's: "state-spp-" also matched "state-spp-mmu-…",
+          # and spp, entsoe and pjm kept restoring their sibling's state and so
+          # had none of their own. The old prefix stays as a fallback for the
+          # first run after this change.
+          key: state2-${{ matrix.source }}_${{ github.run_id }}
           restore-keys: |
+            state2-${{ matrix.source }}_
             state-${{ matrix.source }}-
 
       - name: Run collector
@@ -91,7 +97,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: state
-          key: state-${{ matrix.source }}-${{ github.run_id }}
+          key: state2-${{ matrix.source }}_${{ github.run_id }}
 
       - name: Upload run report
         # Diagnostic only: a collector that ran must not fail because GitHub's
@@ -153,8 +159,14 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: state
-          key: state-${{ matrix.source }}-${{ github.run_id }}
+          # The key ends the source name with "_" so that one source's prefix
+          # cannot match another's: "state-spp-" also matched "state-spp-mmu-…",
+          # and spp, entsoe and pjm kept restoring their sibling's state and so
+          # had none of their own. The old prefix stays as a fallback for the
+          # first run after this change.
+          key: state2-${{ matrix.source }}_${{ github.run_id }}
           restore-keys: |
+            state2-${{ matrix.source }}_
             state-${{ matrix.source }}-
 
       - name: Run collector
@@ -183,7 +195,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: state
-          key: state-${{ matrix.source }}-${{ github.run_id }}
+          key: state2-${{ matrix.source }}_${{ github.run_id }}
 
       - name: Upload run report
         # Diagnostic only: a collector that ran must not fail because GitHub's
