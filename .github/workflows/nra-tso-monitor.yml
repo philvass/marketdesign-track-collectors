@@ -31,9 +31,9 @@ jobs:
       fail-fast: false
       # Four at a time: the fleet passed 120 sources, each on its own host, and
       # two at a time made a run outlast the gap to the next one's start.
-      max-parallel: 4
+      max-parallel: 8
       matrix:
-        source: [cre, bnetza, ofgem, rte, neso, german-tsos, jao, nemo, aib, nbm, dgclima, creg, acm, elexon, arera, ceer, recs, energinet, nordpool, omie, gme, epex, cnmc, ure, pse, eirgrid, eur-lex, eu-dso, acer, entsoe, commission, caiso, miso, pjm, spp, pjm-imm, potomac, spp-mmu, texas-register, entsoe-consultations, elia, swissgrid, elcom, bfe, admie, agen-rs, anre, apg, ast, at-gov, bg-gov, brugel, bsp, creos, cropex, cru, cwape, desnz, dk-gov, econtrol, ee-gov, ei, elering, eles, energy-community, erse, eru, eso, fingrid, forsyningstilsynet, fr-gov, gr-gov, henex, hera, hops, hr-gov, hu-gov, hupx, ilr, kevr, konkurentsiamet, lccc, lv-gov, mase, mekh, miteco, nl-gov, okte, omip, opcom, ote, pl-gov, pt-gov, raaey, ree, ren, rme, se-gov, sem-committee, semo, seps, si-gov, sk-gov, soni, sprk, statnett, svk, tge, transelectrica, tsoc, uregni, urso, vreg]
+        source: [admie, agen-rs, anre, apg, ast, at-gov, bg-gov, brugel, bsp, creos, cropex, cru, cwape, desnz, dk-gov, econtrol, ee-gov, ei, elering, eles, energy-community, erse, eru, eso, fingrid, forsyningstilsynet, fr-gov, gr-gov, henex, hera, hops, hr-gov, hu-gov, hupx, ilr, kevr, konkurentsiamet, lccc, lv-gov, mase, mekh, miteco, nl-gov, okte, omip, opcom, ote, pl-gov, pt-gov, raaey, ree, ren, rme, se-gov, sem-committee, semo, seps, si-gov, sk-gov, soni, sprk, statnett, svk, tge, transelectrica, tsoc, uregni, urso, vreg, eirgrid]
     steps:
       - name: Skip if a single source was requested
         id: gate
@@ -111,7 +111,7 @@ jobs:
       fail-fast: false
       max-parallel: 2
       matrix:
-        source: [terna, eex, ferc, nyiso, tennet, nerc]
+        source: [tennet]
     steps:
       - name: Skip if a single source was requested
         id: gate
