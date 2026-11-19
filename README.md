@@ -49,6 +49,106 @@ editorial review.
 | `bfe` | Swiss Federal Office of Energy and DETEC (CH) | federal news service feed for the energy office (German edition), electricity filter; teaser-only because admin.ch article pages refuse automated requests. Fetch it once per run: the service drops connections under repeated requests |
 | `elia` | Elia (BE TSO) | plain crawl of consultations + press releases under a declared agent, as elia.be/robots.txt permits; the WAF currently answers 403, so runs report `upstream_unavailable` and exit 0 |
 
+## Europe-wide extension (November 2026)
+
+Regulators, system operators, exchanges and energy ministries added in one batch.
+Each adapter's own docstring records the route it reads and what it leaves out.
+
+| Key | Institution | Type | Summary |
+|---|---|---|---|
+| `admie` | ADMIE (IPTO) | TSO | ADMIE / IPTO — the Independent Power Transmission Operator, the Greek TSO. |
+| `agen-rs` | Agencija za energijo (Slovenia) | REGULATOR | Agencija za energijo — the Slovenian energy regulator. |
+| `anre` | ANRE (Romania) | REGULATOR | ANRE — Autoritatea Națională de Reglementare în Domeniul Energiei, the Romanian energy regulator. |
+| `apg` | Austrian Power Grid (APG) | TSO | Austrian Power Grid (APG) — the Austrian transmission system operator. |
+| `ast` | Augstsprieguma tīkls (AST) | TSO | AST — Augstsprieguma tīkls, the Latvian transmission system operator. |
+| `at-gov` | Austrian Federal Ministry of Economy, Energy and Tourism (BMWET) | GOVERNMENT | Austrian Federal Ministry of Economy, Energy and Tourism (BMWET). |
+| `bg-gov` | Ministry of Energy (Bulgaria) | GOVERNMENT | Bulgarian Ministry of Energy (Министерство на енергетиката). |
+| `brugel` | Brugel | REGULATOR | Brugel — the Brussels-Capital regulator for electricity, gas and water. |
+| `bsp` | BSP SouthPool | MARKET_OPERATOR | BSP SouthPool — the Slovenian power exchange (part of ADEX Group). |
+| `creos` | Creos Luxembourg | TSO | Creos Luxembourg — the Luxembourg electricity (and gas) network operator, which owns and runs the transmission grid. |
+| `cropex` | CROPEX | MARKET_OPERATOR | CROPEX — the Croatian power exchange. |
+| `cru` | CRU (Commission for Regulation of Utilities) | REGULATOR | CRU — the Commission for Regulation of Utilities, Ireland's energy and water regulator. |
+| `cwape` | CWaPE | REGULATOR | CWaPE — the Walloon energy regulator (Commission wallonne pour l'Energie). |
+| `desnz` | Department for Energy Security and Net Zero (DESNZ) | GOVERNMENT | DESNZ — the UK Department for Energy Security and Net Zero. |
+| `dk-gov` | Danish Ministry of Climate, Energy and Utilities / Danish Energy Agency | GOVERNMENT | Danish Ministry of Climate, Energy and Utilities (KEFM) and the Danish Energy Agency (Energistyrelsen). |
+| `econtrol` | E-Control | REGULATOR | E-Control — the Austrian regulator for electricity, gas and hydrogen. |
+| `ee-gov` | Estonian Ministry of Climate (Kliimaministeerium) | GOVERNMENT | Estonian Ministry of Climate (Kliimaministeerium) — the ministry responsible for energy. |
+| `ei` | Energimarknadsinspektionen (Ei) | REGULATOR | Energimarknadsinspektionen (Ei) — the Swedish energy markets regulator. |
+| `elering` | Elering | TSO | Elering — the Estonian electricity and gas transmission system operator. |
+| `eles` | ELES | TSO | ELES — the Slovenian electricity transmission system operator. |
+| `erse` | ERSE | REGULATOR | ERSE — Entidade Reguladora dos Serviços Energéticos, the Portuguese energy regulator. |
+| `eru` | ERÚ (Energetický regulační úřad) | REGULATOR | ERÚ (Energetický regulační úřad) — the Czech energy regulator. |
+| `eso` | ESO EAD (Bulgaria) | TSO | ESO EAD — Електроенергиен системен оператор, the Bulgarian electricity transmission system operator. |
+| `fingrid` | Fingrid | TSO | Fingrid — the Finnish transmission system operator. |
+| `forsyningstilsynet` | Forsyningstilsynet | REGULATOR | Forsyningstilsynet — the Danish Utility Regulator. |
+| `fr-gov` | French Ministry for Energy (DGEC) | GOVERNMENT | French energy ministry (DGEC) — public consultations on draft regulations. |
+| `henex` | HEnEx (Hellenic Energy Exchange) | MARKET_OPERATOR | HEnEx — the Hellenic Energy Exchange (EnEx Group), operator of the Greek day-ahead, intraday and energy derivatives markets, with its clearing house EnExClear. |
+| `hera` | HERA (Croatia) | REGULATOR | HERA — the Croatian Energy Regulatory Agency. |
+| `hops` | HOPS | TSO | HOPS — the Croatian transmission system operator. |
+| `hr-gov` | Ministry of Economy (Croatia) | GOVERNMENT | Croatian Ministry of Economy (Ministarstvo gospodarstva), which holds the energy portfolio through its energy directorate. |
+| `hu-gov` | Hungarian Ministry of Economy and Energy | GOVERNMENT | Hungarian Ministry of Economy and Energy (Gazdasági és Energetikai Minisztérium), on the government portal kormany.hu. |
+| `hupx` | HUPX | MARKET_OPERATOR | HUPX — the Hungarian power exchange and the country's nominated electricity market operator. |
+| `ilr` | ILR (Institut Luxembourgeois de Régulation) | REGULATOR | ILR — Institut Luxembourgeois de Régulation, the Luxembourg regulator. |
+| `kevr` | KEVR (Bulgaria) | REGULATOR | KEVR (EWRC) — the Bulgarian Energy and Water Regulatory Commission. |
+| `konkurentsiamet` | Konkurentsiamet (Estonian Competition Authority) | REGULATOR | Konkurentsiamet — the Estonian Competition Authority, which is also the energy regulator. |
+| `lccc` | Low Carbon Contracts Company (LCCC) | MARKET_OPERATOR | LCCC — Low Carbon Contracts Company, the UK government-owned counterparty to Contracts for Difference, and with its sister Electricity Settlements Company the settlement  |
+| `lv-gov` | Latvian Ministry of Climate and Energy (KEM) | GOVERNMENT | Latvian Ministry of Climate and Energy (Klimata un enerģētikas ministrija, KEM). |
+| `mase` | MASE (Italian Ministry of Environment and Energy Security) | GOVERNMENT | MASE — Ministero dell'Ambiente e della Sicurezza Energetica, the Italian ministry that holds the energy portfolio. |
+| `mekh` | MEKH (Hungarian Energy and Public Utility Regulatory Authority) | REGULATOR | MEKH (Magyar Energetikai és Közmű-szabályozási Hivatal) — the Hungarian energy and public utility regulator. |
+| `miteco` | MITECO (Spanish Ministry for the Ecological Transition) | GOVERNMENT | MITECO — the Spanish Ministry for the Ecological Transition, which holds the energy portfolio. |
+| `nl-gov` | Dutch Ministry of Economic Affairs and Climate (EZK/KGG) | GOVERNMENT | Dutch government — the ministry responsible for energy (Economische Zaken en Klimaat, with the ministers for Klimaat en Groene Groei), on rijksoverheid.nl. |
+| `okte` | OKTE (Slovak market operator) | MARKET_OPERATOR | OKTE — the Slovak short-term electricity market operator. |
+| `omip` | OMIP | MARKET_OPERATOR | OMIP — the Portuguese pole of the Iberian electricity market operator: the derivatives exchange for MIBEL power (and PVB gas) futures, with its clearing house OMIClear. I |
+| `opcom` | OPCOM | MARKET_OPERATOR | OPCOM — the Romanian electricity and gas market operator. |
+| `ote` | OTE (Czech market operator) | MARKET_OPERATOR | OTE — the Czech electricity and gas market operator. |
+| `pl-gov` | Polish Ministry of Energy | GOVERNMENT | Polish Ministry of Energy (Ministerstwo Energii), on the government portal gov.pl/web/energia. |
+| `pt-gov` | DGEG (Portuguese Directorate-General for Energy and Geology) | GOVERNMENT | DGEG — Direção-Geral de Energia e Geologia, the Portuguese government's energy directorate under the ministry responsible for energy. |
+| `raaey` | RAAEY (Greek Regulatory Authority for Energy) | REGULATOR | RAAEY (formerly RAE) — the Greek Regulatory Authority for Waste, Energy and Water. Its energy branch regulates electricity and gas. |
+| `ree` | Red Eléctrica (REE) | TSO | Red Eléctrica (REE) — the Spanish transmission system operator. |
+| `ren` | REN (Redes Energéticas Nacionais) | TSO | REN — Redes Energéticas Nacionais, the Portuguese transmission system operator for electricity (and gas). |
+| `rme` | RME (Reguleringsmyndigheten for energi) | REGULATOR | RME — Reguleringsmyndigheten for energi, the Norwegian energy regulator at NVE. |
+| `se-gov` | Swedish Government Offices (Energy) | GOVERNMENT | Swedish Government Offices — energy (regeringen.se). |
+| `sem-committee` | SEM Committee | REGULATOR | SEM Committee — the decision-making body of the all-island Single Electricity Market, formed by CRU (Ireland), the Utility Regulator (Northern Ireland) and independent me |
+| `semo` | SEMO / SEMOpx | MARKET_OPERATOR | SEMO and SEMOpx — the market operator of the all-island Single Electricity Market (balancing market and capacity market) and its day-ahead and intraday exchange. Both are |
+| `seps` | SEPS (Slovenská elektrizačná prenosová sústava) | TSO | SEPS (Slovenská elektrizačná prenosová sústava) — the Slovak transmission system operator. |
+| `si-gov` | Ministry of Infrastructure and Energy (Slovenia) | GOVERNMENT | Slovenian Ministry of Infrastructure and Energy (Ministrstvo za infrastrukturo in energetiko), on the government portal gov.si. |
+| `soni` | SONI | TSO | SONI — the electricity transmission system operator for Northern Ireland and, with EirGrid, operator of the all-island market and system. |
+| `sprk` | SPRK (Latvian Public Utilities Commission) | REGULATOR | SPRK — Sabiedrisko pakalpojumu regulēšanas komisija, the Latvian Public Utilities Commission and national energy regulator. |
+| `statnett` | Statnett | TSO | Statnett — the Norwegian transmission system operator. |
+| `svk` | Svenska kraftnät | TSO | Svenska kraftnät — the Swedish transmission system operator. |
+| `tge` | TGE (Towarowa Giełda Energii) | MARKET_OPERATOR | TGE — Towarowa Giełda Energii, the Polish power exchange and the Polish NEMO for single day-ahead and intraday coupling. |
+| `transelectrica` | Transelectrica | TSO | Transelectrica — the Romanian electricity transmission system operator. |
+| `tsoc` | TSOC (Transmission System Operator Cyprus) | TSO | TSOC (ΔΣΜΚ) — the Transmission System Operator of Cyprus, which is also the island's electricity market operator. |
+| `uregni` | Utility Regulator (Northern Ireland) | REGULATOR | Utility Regulator (UR) — the regulator of electricity, gas and water in Northern Ireland, and one of the two regulators behind the SEM Committee. |
+| `urso` | ÚRSO (Úrad pre reguláciu sieťových odvetví) | REGULATOR | ÚRSO (Úrad pre reguláciu sieťových odvetví) — the Slovak regulator of network industries: electricity, gas, heat and water. |
+| `vreg` | VREG / Vlaamse Nutsregulator | REGULATOR | VREG, since 2025 the Vlaamse Nutsregulator (VNR) — the Flemish regulator for electricity and gas distribution, now also heat, water and CO2 transport. |
+
+The small-country ministries (`at-gov`, `hu-gov`, `si-gov`, `hr-gov`, `bg-gov`, `ee-gov`,
+`lv-gov`, `pt-gov`, `dk-gov`, `se-gov`) pass a second, stricter title test in
+`sources/gov_common.py`: a title must name a market-design instrument, concern the
+power sector, and not be a diplomatic or ceremonial item. On the titles each let
+through before, it keeps roughly one in three.
+
+A source's first run records what exists and submits nothing (`first_run_baseline`
+in the run summary); it reports from its second run on.
+
+Not collected, and why:
+
+- **Browser challenge or CAPTCHA on every request** (not worked around): Norwegian
+  Ministry of Energy (regjeringen.no), Energiavirasto and the Finnish ministry,
+  the German ministry (BMWE), FPS Economy (BE), VERT and the Lithuanian ministry,
+  the Romanian ministry, IBEX.
+- **robots.txt disallows all agents**: ČEPS, MAVIR, the Czech ministry (mpo.gov.cz),
+  internetconsultatie.nl.
+- **robots.txt names AI crawlers as unwelcome** (adapters written, deliberately not
+  registered, since documents are passed to a language model): `cera` (CY),
+  `litgrid` (LT), `ie_gov` (gov.ie). Register them only on a decision that this
+  use is acceptable to the publisher.
+- **Refused from the CI runners** (403 or 500 there, though readable from a European
+  address; adapters written, not registered): `energy_community`, `gr_gov` (ypen.gov.gr),
+  `sk_gov` (economy.gov.sk). Retest from CI before registering.
+- **Nothing to collect**: REWS (MT).
+
 Deferred: **ERCOT** (ercot.com) — Imperva/Incapsula returns 403 to plain
 requests, to the rendered fetch, and to every subdomain tried (`sa.`, `data.`,
 `apiexplorer.`, `api.`). Even `robots.txt` is refused, so ERCOT publishes no
