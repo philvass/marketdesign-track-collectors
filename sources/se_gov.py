@@ -107,3 +107,10 @@ def fetch_content(session, candidate: Candidate) -> str:
     if len(text.strip()) < 200:
         raise CollectorError(f"regeringen.se page yielded too little text: {candidate.url}")
     return text[:MAX_CONTENT_CHARS]
+
+
+# Small administration, one press channel: keep only titles that name a
+# market-design instrument. See sources/gov_common.py for the test and why.
+from sources.gov_common import market_design_only  # noqa: E402
+
+discover = market_design_only(discover, INSTITUTION)

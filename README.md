@@ -123,6 +123,12 @@ Each adapter's own docstring records the route it reads and what it leaves out.
 | `urso` | ÚRSO (Úrad pre reguláciu sieťových odvetví) | REGULATOR | ÚRSO (Úrad pre reguláciu sieťových odvetví) — the Slovak regulator of network industries: electricity, gas, heat and water. |
 | `vreg` | VREG / Vlaamse Nutsregulator | REGULATOR | VREG, since 2025 the Vlaamse Nutsregulator (VNR) — the Flemish regulator for electricity and gas distribution, now also heat, water and CO2 transport. |
 
+The small-country ministries (`at-gov`, `hu-gov`, `si-gov`, `hr-gov`, `bg-gov`, `ee-gov`,
+`lv-gov`, `pt-gov`, `dk-gov`, `se-gov`) pass a second, stricter title test in
+`sources/gov_common.py`: a title must name a market-design instrument, concern the
+power sector, and not be a diplomatic or ceremonial item. On the titles each let
+through before, it keeps roughly one in three.
+
 A source's first run records what exists and submits nothing (`first_run_baseline`
 in the run summary); it reports from its second run on.
 
