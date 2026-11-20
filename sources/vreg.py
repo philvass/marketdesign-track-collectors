@@ -29,7 +29,7 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, extract_pdf_text, slugify, MAX_CONTENT_CHARS)
 
 INSTITUTION = "VREG / Vlaamse Nutsregulator"
@@ -107,7 +107,7 @@ def discover(session):
         raise CollectorError("Vlaamse Nutsregulator search endpoints returned no cards: format changed. "
                              + " | ".join(errors)[:300])
     if not found:
-        raise UpstreamUnavailable("No electricity item among the newest Vlaamse Nutsregulator publications")
+        raise QuietRun("No electricity item among the newest Vlaamse Nutsregulator publications")
     return f"{DOCUMENTS} + {NEWS}", list(found.values())
 
 

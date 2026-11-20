@@ -27,7 +27,7 @@ from email.utils import parsedate_to_datetime
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, slugify, MAX_CONTENT_CHARS)
 
 INSTITUTION = "MEKH (Hungarian Energy and Public Utility Regulatory Authority)"
@@ -83,7 +83,7 @@ def discover(session):
         _LEADS[sid] = lead
         found.setdefault(sid, Candidate(sid, title, day, link))
     if not found:
-        raise UpstreamUnavailable("No electricity item in the MEKH feed this run")
+        raise QuietRun("No electricity item in the MEKH feed this run")
     return FEED, list(found.values())
 
 

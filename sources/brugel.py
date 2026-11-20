@@ -27,7 +27,7 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, extract_pdf_text, slugify, MAX_CONTENT_CHARS)
 
 INSTITUTION = "Brugel"
@@ -118,7 +118,7 @@ def discover(session):
     if not cards_seen:
         raise CollectorError("Brugel lists yielded no entries: markup changed. " + " | ".join(errors)[:300])
     if not found:
-        raise UpstreamUnavailable("Brugel lists held no electricity item this run")
+        raise QuietRun("Brugel lists held no electricity item this run")
     return " + ".join(DOCUMENT_LISTS + NEWS_LISTS), list(found.values())
 
 

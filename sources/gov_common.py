@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import re
 
-from core import UpstreamUnavailable
+from core import QuietRun
 
 _POWER = re.compile(
     r"strom|elektri|elektro|electri|eletri|électri|elnät|elnet|elmarkn|elmarked|elområd|elpris|elräkn|"
@@ -62,14 +62,6 @@ _CEREMONIAL = re.compile(
     r"donation|donācij|annetus|adomány|дарени|"
     r"nagrad|auszeichnung|díjat|награда|auhin|balv|prémio|pris\b|"
     r"uuring|študij|studie zeigt|tanulmány|pētījum", re.I)
-
-
-class QuietRun(UpstreamUnavailable):
-    """The source was read and nothing in it is market design: a normal day."""
-
-    def __init__(self, message: str, seen: int):
-        super().__init__(message)
-        self.quiet_seen = seen
 
 
 def is_market_design(title: str) -> bool:

@@ -19,7 +19,7 @@ import re
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, slugify, MAX_CONTENT_CHARS)
 
 INSTITUTION = "REN (Redes Energéticas Nacionais)"
@@ -73,7 +73,7 @@ def discover(session):
         if len(found) >= MAX_ITEMS:
             break
     if not found:
-        raise UpstreamUnavailable("No system or market item on the REN news listing this run")
+        raise QuietRun("No system or market item on the REN news listing this run")
     return NEWS, list(found.values())
 
 

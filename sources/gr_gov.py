@@ -25,7 +25,7 @@ import unicodedata
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   MAX_CONTENT_CHARS)
 
 INSTITUTION = "YPEN (Greek Ministry of Environment and Energy)"
@@ -91,7 +91,7 @@ def discover(session):
         if len(found) >= MAX_ITEMS:
             break
     if not found:
-        raise UpstreamUnavailable("No electricity release among the newest YPEN posts this run")
+        raise QuietRun("No electricity release among the newest YPEN posts this run")
     return f"{BASE}/category/grafeio-typou/", list(found.values())
 
 

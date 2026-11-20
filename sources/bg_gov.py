@@ -23,7 +23,7 @@ from zoneinfo import ZoneInfo
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, MAX_CONTENT_CHARS)
 
 INSTITUTION = "Ministry of Energy (Bulgaria)"
@@ -82,7 +82,7 @@ def discover(session):
             break
     # A dozen releases with nothing on electricity among them is a quiet week.
     if not found:
-        raise UpstreamUnavailable("No electricity item in the Bulgarian ministry feed this run")
+        raise QuietRun("No electricity item in the Bulgarian ministry feed this run")
     return FEED, list(found.values())
 
 

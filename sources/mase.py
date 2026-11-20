@@ -25,7 +25,7 @@ import re
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, slugify, MAX_CONTENT_CHARS)
 
 INSTITUTION = "MASE (Italian Ministry of Environment and Energy Security)"
@@ -81,7 +81,7 @@ def discover(session):
     if not rows_seen:
         raise CollectorError("MASE tables listed no rows: markup changed. " + " | ".join(errors)[:300])
     if not found:
-        raise UpstreamUnavailable("No electricity item on the MASE listings this run")
+        raise QuietRun("No electricity item on the MASE listings this run")
     return " + ".join(LISTS), list(found.values())
 
 

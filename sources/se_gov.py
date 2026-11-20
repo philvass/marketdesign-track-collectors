@@ -27,7 +27,7 @@ from email.utils import parsedate_to_datetime
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, MAX_CONTENT_CHARS)
 
 INSTITUTION = "Swedish Government Offices (Energy)"
@@ -90,7 +90,7 @@ def discover(session):
         rows.append((day or "", Candidate(f"se_gov-{guid}", title, day, link)))
     # No electricity item among a hundred energy items is a quiet spell, not a fault.
     if not rows:
-        raise UpstreamUnavailable("No electricity item in the regeringen.se energy feed this run")
+        raise QuietRun("No electricity item in the regeringen.se energy feed this run")
     rows.sort(key=lambda row: row[0], reverse=True)
     return FEED, [c for _, c in rows[:MAX_ITEMS]]
 

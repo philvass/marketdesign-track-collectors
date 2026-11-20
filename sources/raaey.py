@@ -27,7 +27,7 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   extract_pdf_text, MAX_CONTENT_CHARS)
 
 INSTITUTION = "RAAEY (Greek Regulatory Authority for Energy)"
@@ -100,7 +100,7 @@ def discover(session):
         if len(found) >= MAX_ITEMS:
             break
     if not found:
-        raise UpstreamUnavailable("No electricity item among the newest RAAEY posts this run")
+        raise QuietRun("No electricity item among the newest RAAEY posts this run")
     return LISTING, list(found.values())
 
 
