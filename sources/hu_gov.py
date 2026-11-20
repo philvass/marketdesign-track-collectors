@@ -30,7 +30,7 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, slugify, MAX_CONTENT_CHARS)
 
 INSTITUTION = "Hungarian Ministry of Economy and Energy"
@@ -82,7 +82,7 @@ def discover(session):
         raise CollectorError("kormany.hu pages showed no news cards: markup changed or pages now "
                              "script-built. " + " | ".join(errors)[:200])
     if not found:
-        raise UpstreamUnavailable("No electricity item among the news cards on kormany.hu this run")
+        raise QuietRun("No electricity item among the news cards on kormany.hu this run")
     return " + ".join(PAGES), list(found.values())
 
 

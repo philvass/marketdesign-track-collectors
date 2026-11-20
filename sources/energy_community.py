@@ -29,7 +29,7 @@ from urllib.parse import urlencode
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, slugify, MAX_CONTENT_CHARS)
 
 INSTITUTION = "Energy Community Secretariat"
@@ -99,7 +99,7 @@ def discover(session):
     # Twenty-five items, all on gas or the Ukraine fund, is possible and is
     # not a fault.
     if not found:
-        raise UpstreamUnavailable("No electricity item among the latest Energy Community news")
+        raise QuietRun("No electricity item among the latest Energy Community news")
     return LISTING, list(found.values())
 
 

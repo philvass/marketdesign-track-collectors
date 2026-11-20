@@ -27,7 +27,7 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, slugify, MAX_CONTENT_CHARS)
 
 INSTITUTION = "ÚRSO (Úrad pre reguláciu sieťových odvetví)"
@@ -119,7 +119,7 @@ def discover(session):
     if errors and not found:
         raise CollectorError("ÚRSO yielded nothing. " + " | ".join(errors)[:300])
     if not found:
-        raise UpstreamUnavailable("No electricity item among the latest ÚRSO news and no open consultation")
+        raise QuietRun("No electricity item among the latest ÚRSO news and no open consultation")
     return f"{NEWS} + {CONSULTATIONS}", list(found.values())
 
 

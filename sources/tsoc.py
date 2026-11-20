@@ -23,7 +23,7 @@ import unicodedata
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   MAX_CONTENT_CHARS)
 
 INSTITUTION = "TSOC (Transmission System Operator Cyprus)"
@@ -84,7 +84,7 @@ def discover(session):
         if len(found) >= MAX_ITEMS:
             break
     if not found:
-        raise UpstreamUnavailable("No system or market announcement among the newest TSOC posts")
+        raise QuietRun("No system or market announcement among the newest TSOC posts")
     return LISTING, list(found.values())
 
 

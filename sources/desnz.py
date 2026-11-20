@@ -27,7 +27,7 @@ import re
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, extract_pdf_text, slugify, MAX_CONTENT_CHARS)
 
 INSTITUTION = "Department for Energy Security and Net Zero (DESNZ)"
@@ -86,7 +86,7 @@ def discover(session):
         if len(found) >= MAX_ITEMS:
             break
     if not found:
-        raise UpstreamUnavailable("No electricity item among the latest 100 DESNZ publications")
+        raise QuietRun("No electricity item among the latest 100 DESNZ publications")
     return SEARCH, list(found.values())
 
 

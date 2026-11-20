@@ -27,7 +27,7 @@ import xml.etree.ElementTree as ET
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, MAX_CONTENT_CHARS)
 
 INSTITUTION = "HEnEx (Hellenic Energy Exchange)"
@@ -85,7 +85,7 @@ def discover(session):
         if len(found) >= MAX_ITEMS:
             break
     if not found:
-        raise UpstreamUnavailable("No market-rule announcement in the HEnEx news feed this run")
+        raise QuietRun("No market-rule announcement in the HEnEx news feed this run")
     return FEED, list(found.values())
 
 

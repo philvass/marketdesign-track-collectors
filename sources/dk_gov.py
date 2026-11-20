@@ -30,7 +30,7 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, slugify, MAX_CONTENT_CHARS)
 
 INSTITUTION = "Danish Ministry of Climate, Energy and Utilities / Danish Energy Agency"
@@ -132,7 +132,7 @@ def discover(session):
     if errors and not found:
         raise CollectorError("Danish energy ministry and agency routes both failed. " + " | ".join(errors)[:300])
     if not found:
-        raise UpstreamUnavailable("No electricity item in the newest KEFM and Energistyrelsen releases this run")
+        raise QuietRun("No electricity item in the newest KEFM and Energistyrelsen releases this run")
     return f"{KEFM_SITEMAP} + {ENS_LIST}", found
 
 

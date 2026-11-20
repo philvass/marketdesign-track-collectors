@@ -12,7 +12,7 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
-from core import Candidate, UpstreamUnavailable, get_with_retry, html_to_text, slugify, MAX_CONTENT_CHARS
+from core import QuietRun, Candidate, UpstreamUnavailable, get_with_retry, html_to_text, slugify, MAX_CONTENT_CHARS
 from sources.us_common import REGION, title_in_scope  # noqa: F401
 
 INSTITUTION = "CAISO"
@@ -50,7 +50,7 @@ def discover(session):
         sid = f"caiso-{slugify(url.rstrip('/').split('/')[-1])}"
         found.setdefault(sid, Candidate(sid, title, _date(time_el.get("datetime", "") if time_el else ""), url))
     if not found:
-        raise UpstreamUnavailable("CAISO news listing carried no market-topic releases")
+        raise QuietRun("CAISO news listing carried no market-topic releases")
     return LISTING, list(found.values())
 
 

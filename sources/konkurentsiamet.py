@@ -22,7 +22,7 @@ from email.utils import parsedate_to_datetime
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, slugify, MAX_CONTENT_CHARS)
 
 INSTITUTION = "Konkurentsiamet (Estonian Competition Authority)"
@@ -77,7 +77,7 @@ def discover(session):
     # The feed mixes competition, post and rail news; a stretch with no
     # electricity item in it is a quiet spell, not a fault.
     if not found:
-        raise UpstreamUnavailable("No electricity item in the Konkurentsiamet feed this run")
+        raise QuietRun("No electricity item in the Konkurentsiamet feed this run")
     return FEED, list(found.values())
 
 

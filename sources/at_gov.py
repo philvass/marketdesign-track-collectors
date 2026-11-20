@@ -24,7 +24,7 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, slugify, MAX_CONTENT_CHARS)
 
 INSTITUTION = "Austrian Federal Ministry of Economy, Energy and Tourism (BMWET)"
@@ -78,7 +78,7 @@ def discover(session):
     if not cards:
         raise CollectorError("BMWET press list showed no cards: markup changed")
     if not found:
-        raise UpstreamUnavailable("No electricity item among the latest BMWET press releases")
+        raise QuietRun("No electricity item among the latest BMWET press releases")
     return LISTING, list(found.values())
 
 

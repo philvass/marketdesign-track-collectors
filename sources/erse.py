@@ -27,7 +27,7 @@ from urllib.parse import urljoin, unquote
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, extract_pdf_text, slugify, MAX_CONTENT_CHARS)
 
 INSTITUTION = "ERSE"
@@ -99,7 +99,7 @@ def discover(session):
         raise CollectorError("ERSE listings yielded no cards: markup changed. "
                              + " | ".join(errors)[:300])
     if not found:
-        raise UpstreamUnavailable("No electricity item on the ERSE listings this run")
+        raise QuietRun("No electricity item on the ERSE listings this run")
     return " + ".join(u for _, u in LISTS), list(found.values())
 
 

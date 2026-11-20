@@ -25,7 +25,7 @@ from email.utils import parsedate_to_datetime
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, MAX_CONTENT_CHARS)
 
 INSTITUTION = "Fingrid"
@@ -79,7 +79,7 @@ def discover(session):
         if len(found) >= MAX_ITEMS:
             break
     if not found:
-        raise UpstreamUnavailable("Fingrid news feed carried only disturbance and magazine items this run")
+        raise QuietRun("Fingrid news feed carried only disturbance and magazine items this run")
     return FEED, list(found.values())
 
 

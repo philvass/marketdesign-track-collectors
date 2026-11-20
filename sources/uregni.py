@@ -25,7 +25,7 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, get_with_retry, html_to_text,
+from core import (QuietRun, Candidate, CollectorError, get_with_retry, html_to_text,
                   slugify, UpstreamUnavailable, MAX_CONTENT_CHARS)
 
 INSTITUTION = "Utility Regulator (Northern Ireland)"
@@ -83,7 +83,7 @@ def discover(session):
     if not rows:
         raise CollectorError("Utility Regulator news list showed no rows: markup changed")
     if not found:
-        raise UpstreamUnavailable("No electricity item on the Utility Regulator news pages this run")
+        raise QuietRun("No electricity item on the Utility Regulator news pages this run")
     return LISTING, list(found.values())[:MAX_ITEMS]
 
 

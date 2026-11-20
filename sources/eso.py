@@ -27,7 +27,7 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, MAX_CONTENT_CHARS)
 
 INSTITUTION = "ESO EAD (Bulgaria)"
@@ -86,7 +86,7 @@ def discover(session):
     # Forty notices that are all capacity reductions and environmental
     # announcements is an ordinary stretch for this operator.
     if not found:
-        raise UpstreamUnavailable("No market item among the latest ESO messages and news")
+        raise QuietRun("No market item among the latest ESO messages and news")
     items = sorted(found.values(), key=lambda c: c.publication_date or "", reverse=True)
     return " + ".join(u for _, u in LISTS), items[:MAX_ITEMS]
 

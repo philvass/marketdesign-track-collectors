@@ -31,7 +31,7 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, slugify, MAX_CONTENT_CHARS)
 
 INSTITUTION = "Dutch Ministry of Economic Affairs and Climate (EZK/KGG)"
@@ -102,7 +102,7 @@ def discover(session):
         raise CollectorError("rijksoverheid.nl listed no news on either route: format changed. "
                              + " | ".join(errors)[:300])
     if not found:
-        raise UpstreamUnavailable(f"No electricity item among {listed} current Dutch government releases")
+        raise QuietRun(f"No electricity item among {listed} current Dutch government releases")
     return f"{NEWS_SITEMAP} + {MINISTRY}", list(found.values())[:MAX_ITEMS]
 
 

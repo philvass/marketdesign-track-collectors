@@ -25,7 +25,7 @@ from email.utils import parsedate_to_datetime
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   slugify, MAX_CONTENT_CHARS)
 
 INSTITUTION = "Swiss Federal Office of Energy (BFE)"
@@ -93,7 +93,7 @@ def discover(session):
     # A feed with no electricity item in it is a quiet week, not an outage, and
     # reporting it as one would cry wolf: return what there is, even nothing.
     if not found:
-        raise UpstreamUnavailable("No electricity-market item in the Swiss federal energy feed this run")
+        raise QuietRun("No electricity-market item in the Swiss federal energy feed this run")
     return FEED, list(found.values())
 
 
