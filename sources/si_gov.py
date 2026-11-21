@@ -23,7 +23,7 @@ from email.utils import parsedate_to_datetime
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, slugify, MAX_CONTENT_CHARS)
 
 INSTITUTION = "Ministry of Infrastructure and Energy (Slovenia)"
@@ -78,7 +78,7 @@ def discover(session):
     # The feed holds four months of every transport and energy release; none
     # of them being about electricity is a quiet spell, not a defect.
     if not found:
-        raise UpstreamUnavailable("No electricity item in the Slovenian ministry feed this run")
+        raise QuietRun("No electricity item in the Slovenian ministry feed this run")
     return FEED, list(found.values())
 
 

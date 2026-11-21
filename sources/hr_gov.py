@@ -24,7 +24,7 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, MAX_CONTENT_CHARS)
 
 INSTITUTION = "Ministry of Economy (Croatia)"
@@ -77,7 +77,7 @@ def discover(session):
     # Thirty headlines of an economy ministry with no energy item among them
     # is an ordinary fortnight, not a defect.
     if not found:
-        raise UpstreamUnavailable("No energy item in the Croatian ministry news this run")
+        raise QuietRun("No energy item in the Croatian ministry news this run")
     return LISTING, list(found.values())
 
 

@@ -30,7 +30,7 @@ from email.utils import parsedate_to_datetime
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, MAX_CONTENT_CHARS)
 
 INSTITUTION = "ANRE (Romania)"
@@ -100,7 +100,7 @@ def discover(session):
         raise CollectorError("ANRE feeds carried no items: format changed. "
                              + " | ".join(errors)[:300])
     if not found:
-        raise UpstreamUnavailable("No electricity item in the ANRE feeds this run")
+        raise QuietRun("No electricity item in the ANRE feeds this run")
     items = sorted(found.values(), key=lambda c: c.publication_date or "", reverse=True)
     return " + ".join(FEEDS), items[:MAX_ITEMS]
 

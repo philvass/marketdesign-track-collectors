@@ -78,6 +78,25 @@ class UpstreamUnavailable(CollectorError):
     upstream_unavailable = True
 
 
+class QuietRun(UpstreamUnavailable):
+    """The source was read and its own filter kept nothing: an ordinary day.
+
+    Most sources here are broad (a ministry, a regulator that also covers gas
+    and water, an exchange newsroom) and are narrowed by a title filter, so on
+    many runs nothing passes. That is neither an outage nor a broken adapter,
+    and reporting it as "unavailable" filled the source-health page with
+    sources that were working exactly as intended. A quiet run exits 0 and is
+    reported as healthy, with a note that starts "Quiet:" so the page can label
+    it. `seen` is how many items were read before the filter, when known.
+    """
+
+    quiet = True
+
+    def __init__(self, message: str, seen: int | None = None):
+        super().__init__(message)
+        self.quiet_seen = seen
+
+
 def make_session() -> requests.Session:
     s = requests.Session()
     s.headers.update({
@@ -741,16 +760,13 @@ if __name__ == "__main__":
         token = _argv_value("--token", os.getenv("TRACK_INGEST_TOKEN"))
         source_name = _argv_value("--source", "unknown")
         unavailable = getattr(exc, "upstream_unavailable", False)
-        # A quiet run is not an outage. A source whose own filter kept nothing
-        # of the items it read says so with `quiet_seen`; it is reported as a
-        # healthy run that read that many items and submitted none, so the
-        # source-health page does not mark a ministry's ordinary Tuesday as
-        # "unavailable".
-        quiet_seen = getattr(exc, "quiet_seen", None)
-        if quiet_seen is not None:
+        # A quiet run is not an outage: see QuietRun. The flag is tested, not
+        # the class, for the same __main__/core reason as upstream_unavailable.
+        if getattr(exc, "quiet", False):
+            seen = getattr(exc, "quiet_seen", None)
             report_run(track_url, token, source=source_name, ok=True,
-                       discovered=int(quiet_seen), processed=0, submitted=0,
-                       note=None, collector_version=VERSION)
+                       discovered=int(seen or 0), processed=0, submitted=0,
+                       note=("Quiet: " + str(exc))[:400], collector_version=VERSION)
             print(json.dumps({"ok": True, "collector_version": VERSION,
                               "skipped": "quiet_run", "detail": str(exc)}, ensure_ascii=False))
             raise SystemExit(0)

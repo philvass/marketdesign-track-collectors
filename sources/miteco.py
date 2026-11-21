@@ -28,7 +28,7 @@ import time
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, slugify, MAX_CONTENT_CHARS)
 
 INSTITUTION = "MITECO (Spanish Ministry for the Ecological Transition)"
@@ -143,7 +143,7 @@ def discover(session):
     if errors and not found:
         raise CollectorError("MITECO listings unreadable. " + " | ".join(errors)[:300])
     if not found:
-        raise UpstreamUnavailable("No electricity item on the MITECO listings this run")
+        raise QuietRun("No electricity item on the MITECO listings this run")
     return f"{CONSULTATIONS} + {NEWS}", list(found.values())
 
 

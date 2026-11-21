@@ -24,7 +24,7 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, MAX_CONTENT_CHARS)
 
 INSTITUTION = "TGE (Towarowa Giełda Energii)"
@@ -64,7 +64,7 @@ def discover(session):
     if not rows:
         raise CollectorError("TGE listing carried no announcements: markup changed")
     if not found:
-        raise UpstreamUnavailable("TGE listing held only corporate items this run")
+        raise QuietRun("TGE listing held only corporate items this run")
     return LISTING, list(found.values())
 
 

@@ -24,7 +24,7 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, slugify, MAX_CONTENT_CHARS)
 
 INSTITUTION = "Energimarknadsinspektionen (Ei)"
@@ -86,7 +86,7 @@ def discover(session):
     if not seen:
         raise CollectorError("Ei news archive listed no items: markup or search form changed")
     if not found:
-        raise UpstreamUnavailable("No electricity item among the newest Ei news this run")
+        raise QuietRun("No electricity item among the newest Ei news this run")
     return PAGES[0], list(found.values())
 
 

@@ -27,7 +27,7 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, extract_pdf_text, slugify, MAX_CONTENT_CHARS)
 
 INSTITUTION = "CWaPE"
@@ -67,7 +67,7 @@ def discover(session):
     if not cards:
         raise CollectorError("CWaPE listing carried no dated announcements: markup changed")
     if not found:
-        raise UpstreamUnavailable("CWaPE listing held only licences and notices this run")
+        raise QuietRun("CWaPE listing held only licences and notices this run")
     return LISTING, list(found.values())
 
 

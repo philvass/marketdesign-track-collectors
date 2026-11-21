@@ -28,7 +28,7 @@ import xml.etree.ElementTree as ET
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, extract_pdf_text, looks_like_pdf, slugify, MAX_CONTENT_CHARS)
 
 INSTITUTION = "OMIP"
@@ -111,7 +111,7 @@ def discover(session):
     if not seen_any:
         raise CollectorError("OMIP feeds carried no items: format changed. " + " | ".join(errors)[:300])
     if not found:
-        raise UpstreamUnavailable("No market-rule item in the OMIP feeds this run")
+        raise QuietRun("No market-rule item in the OMIP feeds this run")
     return f"{NEWS_FEED} + {STRUCTURE_FEED}", list(found.values())
 
 

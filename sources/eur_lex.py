@@ -19,7 +19,7 @@ from datetime import date, timedelta
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, MAX_CONTENT_CHARS)
 
 INSTITUTION = "EUR-Lex"
@@ -110,7 +110,7 @@ def discover(session):
         found.setdefault(sid, Candidate(sid, title, published, url_doc))
 
     if not found:
-        raise UpstreamUnavailable(
+        raise QuietRun(
             f"no energy acts indexed in CELLAR since {since}")
     return f"{SPARQL} (directory code 12, since {since})", list(found.values())
 

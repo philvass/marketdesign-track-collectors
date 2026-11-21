@@ -22,7 +22,7 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, slugify, MAX_CONTENT_CHARS)
 
 INSTITUTION = "Latvian Ministry of Climate and Energy (KEM)"
@@ -84,7 +84,7 @@ def discover(session):
         raise CollectorError("KEM news listing showed no article cards: markup changed")
     # Two pages of ministry news with nothing on electricity is a quiet spell.
     if not found:
-        raise UpstreamUnavailable("No electricity item on the KEM news pages this run")
+        raise QuietRun("No electricity item on the KEM news pages this run")
     return LISTING, list(found.values())[:MAX_ITEMS]
 
 

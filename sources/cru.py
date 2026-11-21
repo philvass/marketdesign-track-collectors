@@ -25,7 +25,7 @@ import re
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, slugify, MAX_CONTENT_CHARS)
 
 INSTITUTION = "CRU (Commission for Regulation of Utilities)"
@@ -86,7 +86,7 @@ def discover(session):
         if len(found) >= MAX_ITEMS:
             break
     if not found:
-        raise UpstreamUnavailable("No electricity-market item among the newest CRU news pages")
+        raise QuietRun("No electricity-market item among the newest CRU news pages")
     return f"{API}?type=newsapp.NewsContentPage", list(found.values())
 
 

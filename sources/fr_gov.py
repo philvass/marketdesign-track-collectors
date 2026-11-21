@@ -29,7 +29,7 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, MAX_CONTENT_CHARS)
 
 INSTITUTION = "French Ministry for Energy (DGEC)"
@@ -92,7 +92,7 @@ def discover(session):
     if not cards_seen:
         raise CollectorError("French consultation site listed no consultations: markup changed")
     if not found:
-        raise UpstreamUnavailable(
+        raise QuietRun(
             f"No electricity text among the {cards_seen} newest energy and climate consultations")
     return SECTION, list(found.values())
 

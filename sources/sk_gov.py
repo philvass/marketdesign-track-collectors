@@ -25,7 +25,7 @@ import xml.etree.ElementTree as ET
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, slugify, MAX_CONTENT_CHARS)
 
 INSTITUTION = "Slovak Ministry of Economy (MH SR)"
@@ -66,7 +66,7 @@ def discover(session):
         sid = f"sk_gov-{slugify(link.rstrip('/').split('/')[-1], 140)}"
         found.setdefault(sid, Candidate(sid, title, day.group(0) if day else None, link))
     if not found:
-        raise UpstreamUnavailable("No electricity item in the MH SR feed this run")
+        raise QuietRun("No electricity item in the MH SR feed this run")
     return FEED, list(found.values())
 
 

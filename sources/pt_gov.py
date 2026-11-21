@@ -26,7 +26,7 @@ from urllib.parse import urljoin, unquote
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, slugify, MAX_CONTENT_CHARS)
 
 INSTITUTION = "DGEG (Portuguese Directorate-General for Energy and Geology)"
@@ -76,7 +76,7 @@ def discover(session):
         if len(found) >= MAX_ITEMS:
             break
     if not found:
-        raise UpstreamUnavailable("No electricity item at the head of the DGEG highlights this run")
+        raise QuietRun("No electricity item at the head of the DGEG highlights this run")
     return LISTING, list(found.values())
 
 

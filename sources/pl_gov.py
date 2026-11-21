@@ -27,7 +27,7 @@ from urllib.parse import urljoin, urlparse
 
 from bs4 import BeautifulSoup
 
-from core import (Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
+from core import (QuietRun, Candidate, CollectorError, UpstreamUnavailable, get_with_retry,
                   html_to_text, slugify, MAX_CONTENT_CHARS)
 
 INSTITUTION = "Polish Ministry of Energy"
@@ -85,7 +85,7 @@ def discover(session):
     if not rows:
         raise CollectorError("gov.pl energy ministry listing carried no dated items: markup changed")
     if not found:
-        raise UpstreamUnavailable(f"No electricity item among the {rows} newest Polish energy ministry releases")
+        raise QuietRun(f"No electricity item among the {rows} newest Polish energy ministry releases")
     return LISTING, list(found.values())[:MAX_ITEMS]
 
 
