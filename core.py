@@ -770,7 +770,7 @@ if __name__ == "__main__":
             print(json.dumps({"ok": True, "collector_version": VERSION,
                               "skipped": "quiet_run", "detail": str(exc)}, ensure_ascii=False))
             raise SystemExit(0)
-        report_run(track_url, token, source=source_name, ok=not unavailable,
+        report_run(track_url, token, source=source_name, ok=False,
                    discovered=0, processed=0, submitted=0,
                    note=str(exc)[:400], collector_version=VERSION)
         if unavailable:
