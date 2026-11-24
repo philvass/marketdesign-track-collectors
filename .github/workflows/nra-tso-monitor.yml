@@ -1,8 +1,13 @@
 name: MarketDesign.ai collectors
 
 on:
+  # The collectors are started by the TRACK worker on Cloudflare's timer, four
+  # times a day. GitHub's own scheduler ran this workflow four to seven hours
+  # late and dropped more slots every month (four a day in September 2026, one
+  # by 23 November), so it is kept only as a once-a-day fallback that stands
+  # down when a run has reported recently (see fallback-gate).
   schedule:
-    - cron: "37 */6 * * *"
+    - cron: "37 3 * * *"
   workflow_dispatch:
     inputs:
       mode:
@@ -24,9 +29,25 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # A scheduled run is a fallback: it goes ahead only if no collector has
+  # reported for ten hours, which means the worker's trigger has failed. If the
+  # status cannot be read, it goes ahead.
+  fallback-gate:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.check.outputs.run }}
+    steps:
+      - id: check
+        run: |
+          if [ "${{ github.event_name }}" != "schedule" ]; then echo "run=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          MIN=$(curl -s -m 30 https://marketdesign.ai/api/track/collector-trigger | python3 -c "import json,sys; v=json.load(sys.stdin).get('last_report_minutes'); print(v if isinstance(v,int) else -1)" 2>/dev/null || echo -1)
+          echo "last collector report: ${MIN} min ago"
+          if [ "$MIN" -ge 0 ] && [ "$MIN" -lt 600 ]; then echo "run=false" >> "$GITHUB_OUTPUT"; else echo "run=true" >> "$GITHUB_OUTPUT"; fi
+
   collect:
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || vars.TRACK_AUTOMATION_ENABLED == 'true'
+    needs: fallback-gate
+    if: needs.fallback-gate.outputs.run == 'true' && (github.event_name == 'workflow_dispatch' || vars.TRACK_AUTOMATION_ENABLED == 'true')
     strategy:
       fail-fast: false
       # Four at a time: the fleet passed 120 sources, each on its own host, and
@@ -112,7 +133,8 @@ jobs:
 
   collect-rendered:
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || vars.TRACK_AUTOMATION_ENABLED == 'true'
+    needs: fallback-gate
+    if: needs.fallback-gate.outputs.run == 'true' && (github.event_name == 'workflow_dispatch' || vars.TRACK_AUTOMATION_ENABLED == 'true')
     strategy:
       fail-fast: false
       max-parallel: 2
